@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Em SQLite usamos String para emular Enums
+// User Roles: PASSENGER, FISCAL, COMPANY_ADMIN, SUPER_ADMIN
+// Trip Status: SCHEDULED, BOARDING, IN_TRANSIT, COMPLETED, CANCELLED
+// Ticket Status: PENDING_PAYMENT, PAID, USED, CANCELLED, REFUNDED
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  phone     String   @unique
+  name      String
+  password  String
+  role      String   @default("PASSENGER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relações
+  companyId String?
+  company   Company? @relation("CompanyEmployees", fields: [companyId], references: [id])
+  tickets         Ticket[]
+  companiesManaged Company[] @relation("CompanyAdmin")
+  assignedBuses   Bus[]     @relation("FiscalBuses")
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  nuit      String   @unique
+  status    String   @default("ACTIVE")
+  commission Float    @default(0.10)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relações
+  adminId  String
+  admin    User   @relation("CompanyAdmin", fields: [adminId], references: [id])
+  
+  buses    Bus[]
+  routes   Route[]
+  employees User[] @relation("CompanyEmployees")
+}
+
+model Bus {
+  id        String   @id @default(uuid())
+  plate     String   @unique
+  model     String
+  capacity  Int
+  status    String   @default("ACTIVE")
+  
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+
+  fiscalId  String?
+  fiscal    User?    @relation("FiscalBuses", fields: [fiscalId], references: [id])
+
+  trips     Trip[]
+}
+
+model Route {
+  id          String   @id @default(uuid())
+  origin      String
+  destination String
+  distanceKm  Float?
+  
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+
+  trips       Trip[]
+}
+
+model Trip {
+  id            String     @id @default(uuid())
+  departureTime DateTime
+  arrivalTime   DateTime?
+  price         Decimal
+  status        String     @default("SCHEDULED")
+  seatsMapping  String?    // SQLite não suporta Json nativo
+
+  busId         String
+  bus           Bus        @relation(fields: [busId], references: [id])
+
+  routeId       String
+  route         Route      @relation(fields: [routeId], references: [id])
+
+  tickets       Ticket[]
+}
+
+model Ticket {
+  id            String       @id @default(uuid())
+  qrCode        String       @unique
+  seatNumber    Int
+  status        String       @default("PENDING_PAYMENT")
+  paymentId     String?
+  amountPaid    Decimal?
+  isBoarded     Boolean      @default(false)
+  boardedAt     DateTime?
+  
+  passengerId   String
+  passenger     User         @relation(fields: [passengerId], references: [id])
+
+  tripId        String
+  trip          Trip         @relation(fields: [tripId], references: [id])
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
