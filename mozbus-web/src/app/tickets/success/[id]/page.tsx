@@ -14,12 +14,14 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import TicketPrinter from '@/components/TicketPrinter';
 import EliteLoader from '@/components/EliteLoader';
+import { useToast } from '@/components/EliteToast';
 
 export default function TicketSuccessPage() {
   const { id } = useParams();
   const [ticket, setTicket] = useState<any>(null);
   const [paying, setPaying] = useState(false);
   const [paymentStep, setPaymentStep] = useState<'invite' | 'loading' | 'success'>('invite');
+  const { toast } = useToast();
 
   const fetchTicket = async () => {
       try {
@@ -76,7 +78,7 @@ export default function TicketSuccessPage() {
         link.click();
     } catch (err) {
         console.error('Erro ao baixar bilhete:', err);
-        alert('Erro ao gerar imagem do bilhete. Tente usar a opção PDF.');
+        toast('Erro ao gerar imagem do bilhete. Tente usar a opção PDF.', 'error');
     } finally {
         setDownloading(false);
     }

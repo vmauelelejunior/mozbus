@@ -8,6 +8,7 @@ import { useParams, useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import Navbar from '@/components/Navbar';
 import EliteLoader from '@/components/EliteLoader';
+import { useToast } from '@/components/EliteToast';
 
 import SeatSelectionGrid from '@/components/SeatSelectionGrid';
 import { savePendingReservation } from '@/lib/offline-store';
@@ -20,6 +21,7 @@ export default function SeatSelectionPage() {
   const [seats, setSeats] = useState<any[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     setIsMounted(true);
@@ -56,7 +58,7 @@ export default function SeatSelectionPage() {
           try {
             const token = localStorage.getItem('mozbus_token');
             if (!token) {
-              alert('Por favor, inicie sessão para reservar o seu lugar.');
+              toast('Por favor, inicie sessão para reservar o seu lugar.', 'error');
               router.push(`/auth/login?redirect=/trips/seats/${id}`);
               setIsLoading(false);
               return;
@@ -64,7 +66,7 @@ export default function SeatSelectionPage() {
 
             const userStr = localStorage.getItem('mozbus_user');
             if (!userStr) {
-               alert('Sessão inválida. Por favor, entre novamente.');
+               toast('Sessão inválida. Por favor, entre novamente.', 'error');
                router.push('/auth/login');
                setIsLoading(false);
                return;
@@ -96,17 +98,17 @@ export default function SeatSelectionPage() {
                     if (e.response?.status === 401) {
                         localStorage.removeItem('mozbus_token');
                         localStorage.removeItem('mozbus_user');
-                        alert('Sessão expirada. Por favor, inicie sessão novamente.');
+                        toast('Sessão expirada. Por favor, inicie sessão novamente.', 'error');
                         router.push(`/auth/login?redirect=/trips/seats/${id}`);
                         return;
                     }
                     const errorMsg = e.response?.data?.message || 'Erro ao reservar assento.';
-                    alert(errorMsg);
+                    toast(errorMsg, 'error');
                 }
             }
           } catch (e: any) {
               setIsLoading(false);
-              alert('Erro inesperado no sistema. Tente novamente.');
+              toast('Erro inesperado no sistema. Tente novamente.', 'error');
           }
       }
   };
@@ -129,10 +131,10 @@ export default function SeatSelectionPage() {
             }
         }
 
-        alert('Estás Offline! Guardámos a tua reserva. Ela será enviada automaticamente assim que tiveres sinal. Podes fechar a app à vontade.');
+        toast('Estás Offline! Guardámos a tua reserva. Ela será enviada automaticamente assim que tiveres sinal.', 'info');
         router.push('/tickets/meus-bilhetes');
     } catch (err) {
-        alert('Erro crítico ao salvar reserva offline. Por favor, tenta encontrar sinal.');
+        toast('Erro crítico ao salvar reserva offline. Por favor, tenta encontrar sinal.', 'error');
     } finally {
         setIsLoading(false);
     }

@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Plus, Navigation2, X, Loader2, Trash2, ArrowRight, Zap, Globe } from 'lucide-react';
 import api from '@/lib/api';
 import EliteLoader from '@/components/EliteLoader';
+import { useToast } from '@/components/EliteToast';
+import { AlertCircle } from 'lucide-react';
 
 interface RouteData {
   id: string;
@@ -24,6 +26,8 @@ export default function RoutesPage() {
     distance: '',
     duration: ''
   });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const fetchRoutes = async () => {
     setLoading(true);
@@ -48,18 +52,20 @@ export default function RoutesPage() {
       setShowCreateModal(false);
       setFormData({ origin: '', destination: '', distance: '', duration: '' });
       fetchRoutes();
+      toast('Rota registada com sucesso no atlas.', 'success');
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Erro ao criar rota');
+      toast(e.response?.data?.message || 'Erro ao criar rota', 'error');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Esta rota será removida do atlas de navegação. Confirmar?')) return;
     try {
       await api.delete(`/routes/${id}`);
       fetchRoutes();
+      toast('Rota removida permanentemente.', 'success');
+      setShowDeleteConfirm(null);
     } catch (e) {
-      alert('Erro ao remover rota');
+      toast('Erro ao remover rota', 'error');
     }
   };
 
@@ -116,7 +122,7 @@ export default function RoutesPage() {
                             <Navigation2 size={24} />
                         </div>
                         <button 
-                          onClick={() => handleDelete(route.id)}
+                          onClick={() => setShowDeleteConfirm(route.id)}
                           className="text-white/10 hover:text-rose-500 transition-colors p-2"
                         >
                           <Trash2 size={16} />
@@ -245,6 +251,28 @@ export default function RoutesPage() {
                         Validar Rota <Zap size={14} fill="currentColor" />
                     </button>
                 </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      
+      {/* MODAL DE CONFIRMAÇÃO DE DELETE */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowDeleteConfirm(null)} className="absolute inset-0 bg-black/90 backdrop-blur-2xl" />
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative bg-[#0D0D10] border border-white/10 p-10 rounded-[40px] max-w-sm text-center space-y-8 shadow-3xl">
+                <div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-2xl flex items-center justify-center mx-auto rotate-12">
+                    <AlertCircle size={32} />
+                </div>
+                <div className="space-y-2">
+                    <h3 className="text-2xl font-black uppercase tracking-tighter italic">Remover Rota?</h3>
+                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 leading-relaxed">Esta acção é irreversível e removerá o trajecto de todas as operações futuras.</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <button onClick={() => setShowDeleteConfirm(null)} className="h-14 rounded-2xl bg-white/5 font-black uppercase text-[9px] tracking-widest hover:bg-white/10 transition-all">Cancelar</button>
+                    <button onClick={() => handleDelete(showDeleteConfirm)} className="h-14 rounded-2xl bg-rose-600 text-white font-black uppercase text-[9px] tracking-widest shadow-xl shadow-rose-600/20 hover:bg-rose-500 transition-all">Confirmar</button>
+                </div>
             </motion.div>
           </div>
         )}

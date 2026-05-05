@@ -61,9 +61,15 @@ description: Plano de desenvolvimento MozBus - continuação do projecto do pont
 - [x] Fase 3.5: Módulo de Comunicação CEO <> Operadoras (Concluído)
 
 ## Fase 4: Notificações e UX 10/10
-- [ ] Fase 4.1: Sistema de notificações em tempo real (Toast/Snackbars)
-- [x] Fase 4.2: Loading states premium (Skeletons Aura Negra) (Concluído)
-- [ ] Fase 4.3: Feedback táctil e micro-animações em toda a app
+- [x] **Fase 4.1: Sistema de notificações em tempo real (Toasts Elite)**
+    - [x] Migração de alertas nativos para EliteToast.
+    - [x] Integração de feedback sonoro e visual premium.
+- [x] **Fase 4.2: Premium Skeleton Loading States**
+    - [x] Implementação de Skeletons em Companies e Staff.
+- [x] **Fase 4.3: Feedback táctil e Temas (Ultra Theme Guardian)**
+    - [x] Implementação de Sistema de Temas (Aura Negra / Frosted Snow).
+    - [x] ThemeProvider e Persistência de Preferência.
+    - [x] Componentes Core (Loader, Skeleton, Toast) adaptáveis.
 
 ## SKILLS A CRIAR
 

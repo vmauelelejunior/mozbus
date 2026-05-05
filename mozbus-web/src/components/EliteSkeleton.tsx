@@ -9,7 +9,7 @@ interface EliteSkeletonProps {
 
 export default function EliteSkeleton({ className }: EliteSkeletonProps) {
   return (
-    <div className={`relative overflow-hidden bg-white/5 ${className}`}>
+    <div className={`relative overflow-hidden bg-aura-surface ${className}`}>
       <motion.div
         animate={{
           x: ['-100%', '100%'],

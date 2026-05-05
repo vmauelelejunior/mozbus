@@ -1,80 +1,100 @@
 @import "tailwindcss";
+@plugin "tailwindcss-animate";
 
 @theme {
-  --color-brand-primary: #0EA5E9;
-  --color-brand-secondary: #0B0B0F;
-  --color-brand-accent: #10B981;
-  --color-deep-black: #08080A;
-  --color-pure-black: #000000;
-  --color-aura-bg: #0B0B0F;
-  --color-aura-surface: #16161E;
-  --color-aura-border: rgba(255, 255, 255, 0.08);
+  --color-brand-primary: var(--aura-accent);
+  --color-brand-secondary: var(--aura-bg);
+  --color-aura-bg: var(--aura-bg);
+  --color-aura-surface: var(--aura-surface);
+  --color-aura-border: var(--aura-border);
+  --color-aura-text: var(--aura-text);
+  --color-aura-muted: var(--aura-text-muted);
 }
 
 :root {
-  --background: #0B0B0F;
-  --foreground: #FFFFFF;
-  --card: #16161E;
-  --border: rgba(255, 255, 255, 0.1);
-  --accent: #0EA5E9;
-  --success: #10B981;
+  /* Default Theme: Aura Negra (Dark) */
+  --aura-bg: #0B0B0F;
+  --aura-surface: #16161E;
+  --aura-text: #FFFFFF;
+  --aura-text-muted: rgba(255, 255, 255, 0.6);
+  --aura-border: rgba(255, 255, 255, 0.08);
+  --aura-accent: #0EA5E9;
+  --aura-glass: rgba(22, 22, 30, 0.75);
+  --aura-shadow: rgba(0, 0, 0, 0.5);
+  
+  --background: var(--aura-bg);
+  --foreground: var(--aura-text);
+}
+
+[data-theme='light'] {
+  /* Frosted Snow Theme (Light) */
+  --aura-bg: #F8FAFC;
+  --aura-surface: #FFFFFF;
+  --aura-text: #0F172A;
+  --aura-text-muted: #64748B;
+  --aura-border: rgba(15, 23, 42, 0.06);
+  --aura-accent: #0284C7; /* Slightly deeper sky blue for light contrast */
+  --aura-glass: rgba(255, 255, 255, 0.45);
+  --aura-shadow: rgba(15, 23, 42, 0.08);
+  
+  --background: var(--aura-bg);
+  --foreground: var(--aura-text);
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: var(--aura-text);
+  background: var(--aura-bg);
   font-family: var(--font-geist-sans), sans-serif;
-  transition: background-color 0.5s ease, color 0.5s ease;
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-x: hidden;
 }
 
-/* World Standard - Balanced Surfaces */
+/* Elite Semantic Components */
 .glass-aura {
-  background: rgba(22, 22, 30, 0.85);
-  backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--aura-glass);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--aura-border);
   box-shadow: 
-    0 10px 30px -10px rgba(0, 0, 0, 0.5),
-    inset 0 0 15px rgba(255, 255, 255, 0.02);
+    0 12px 40px -10px var(--aura-shadow),
+    inset 0 0 20px rgba(255, 255, 255, 0.01);
 }
 
 .card-aura {
-  background: #16161E;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--aura-surface);
+  border: 1px solid var(--aura-border);
   border-radius: 1.5rem;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 24px var(--aura-shadow);
 }
 
 .card-aura:hover {
   border-color: rgba(14, 165, 233, 0.4);
-  background: #1C1C24;
   transform: translateY(-4px);
-  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 32px 64px -16px var(--aura-shadow);
 }
 
-/* Aura Background Effect */
+/* Aura Background Effect (Dynamic) */
 .aura-bg-main {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   z-index: -1;
   background: 
-    radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 100% 100%, rgba(14, 165, 233, 0.05) 0%, transparent 40%),
-    #0B0B0F;
+    radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 100% 100%, rgba(14, 165, 233, 0.04) 0%, transparent 40%),
+    var(--aura-bg);
   pointer-events: none;
+  transition: background-color 0.4s ease;
 }
 
 /* Interactive Glow */
 .glow-text {
-  text-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
+  text-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
 }
 
-.sky-glow {
-  text-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
-}
-
-/* Bento System Refinement */
+/* Bento System */
 .bento-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
@@ -87,44 +107,25 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0A0A0B;
+  background: var(--aura-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333;
+  background: var(--aura-border);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent);
-}
-
-/* Animations Hub */
-@keyframes pulse-slow {
-  0%, 100% { opacity: 0.1; }
-  50% { opacity: 0.2; }
-}
-
-.animate-pulse-slow {
-  animation: pulse-slow 8s infinite ease-in-out;
+  background: var(--aura-accent);
 }
 
 /* Print System */
 @media print {
-  body * {
-    visibility: hidden;
-  }
-  .print-only, .print-only * {
-    visibility: visible;
-  }
-  .print-only {
-    position: absolute;
-    left: 0; top: 0;
-    width: 100% !important;
-  }
+  body { background: white !important; color: black !important; }
   .no-print { display: none !important; }
+  .print-only { display: block !important; }
 }
-/* MozBus Slide Animation - Fixed Thread Performance */
+
 @keyframes slide-in {
   from { transform: translateX(-100%); }
   to { transform: translateX(0); }

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bus, User, LogOut, Ticket, LayoutDashboard, ChevronDown, ChevronRight, ShieldCheck, Zap, Bell } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -54,7 +55,7 @@ export default function Navbar() {
   return (
     <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${scrolled ? 'py-3' : 'py-5'}`}>
       <div className={`max-w-7xl mx-auto px-6 md:px-8 transition-all duration-500`}>
-        <div className={`relative flex items-center justify-between px-6 py-3.5 rounded-[24px] border transition-all duration-500 ${scrolled ? 'bg-black/70 backdrop-blur-2xl border-white/10 shadow-xl' : 'bg-transparent border-transparent'}`}>
+        <div className={`relative flex items-center justify-between px-6 py-3.5 rounded-[24px] border transition-all duration-500 ${scrolled ? 'bg-aura-surface/70 backdrop-blur-2xl border-aura-border shadow-xl' : 'bg-transparent border-transparent'}`}>
             {/* Logo Section */}
             <Link href="/" className="flex items-center gap-4 group">
               <motion.div 
@@ -87,7 +88,9 @@ export default function Navbar() {
             </div>
 
             {/* Tactical Console (Auth/Profile) */}
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
+              <ThemeToggle />
+              
               {user ? (
                 <div className="flex items-center gap-6">
                   {/* Notifications */}
@@ -139,11 +142,11 @@ export default function Navbar() {
                                 initial={{ opacity: 0, y: 12, scale: 0.98 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 12, scale: 0.98 }}
-                                className="absolute right-0 mt-4 w-64 glass-aura bg-[#0B0B0F]/95 border border-white/5 rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.8)] p-3 overflow-hidden z-50 backdrop-blur-3xl"
+                                className="absolute right-0 mt-4 w-64 glass-aura rounded-[24px] shadow-[0_20px_60px_var(--aura-shadow)] p-3 overflow-hidden z-50 backdrop-blur-3xl"
                             >
-                                <div className="p-6 mb-2 bg-white/[0.02] rounded-[24px] border border-white/5">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 mb-2">Protocol ID</p>
-                                    <p className="text-xs font-black text-white italic truncate">{user.email}</p>
+                                <div className="p-6 mb-2 bg-aura-surface/50 rounded-[24px] border border-aura-border">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-aura-muted mb-2">Protocol ID</p>
+                                    <p className="text-xs font-black text-aura-text italic truncate">{user.email}</p>
                                     <div className="flex items-center gap-2 mt-4 text-[9px] font-black text-sky-500/60 uppercase tracking-widest">
                                         <ShieldCheck size={12} />
                                         Verified Operator

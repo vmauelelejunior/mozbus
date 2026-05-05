@@ -47,7 +47,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               className="pointer-events-auto"
             >
               <div className={`
-                glass-aura bg-[#0B0B0F]/90 border rounded-[24px] p-5 shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-3xl flex items-center gap-4 relative overflow-hidden group
+                glass-aura bg-aura-bg/90 border rounded-[24px] p-5 shadow-[0_30px_60px_var(--aura-shadow)] backdrop-blur-3xl flex items-center gap-4 relative overflow-hidden group
                 ${t.type === 'success' ? 'border-emerald-500/20' : t.type === 'error' ? 'border-rose-500/20' : 'border-sky-500/20'}
               `}>
                 {/* Kinetic Energy Line */}
@@ -68,7 +68,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   <h4 className="text-[8px] font-black uppercase tracking-[0.3em] opacity-30 mb-1">
                     {t.type === 'success' ? 'Sincronização Concluída' : t.type === 'error' ? 'Falha no Protocolo' : 'Informação do Sistema'}
                   </h4>
-                  <p className="text-[11px] font-black text-white/90 uppercase tracking-tight leading-tight italic">
+                  <p className="text-[11px] font-black text-aura-text uppercase tracking-tight leading-tight italic">
                     {t.message}
                   </p>
                 </div>

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Users, Bus, ChevronRight, X, UserCheck, Search, Loader2, MapPin, DollarSign, Clock, Download, Power, Briefcase } from 'lucide-react';
 import api from '@/lib/api';
 import EliteLoader from '@/components/EliteLoader';
+import { useToast } from '@/components/EliteToast';
 
 export default function TripSchedulerPage() {
   const [trips, setTrips] = useState<any[]>([]);
@@ -14,6 +15,7 @@ export default function TripSchedulerPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [isMounted, setIsMounted] = useState(false);
+  const { toast } = useToast();
   
   const [buses, setBuses] = useState<any[]>([]);
   const [routes, setRoutes] = useState<any[]>([]);
@@ -68,9 +70,9 @@ export default function TripSchedulerPage() {
           setShowCreateModal(false);
           setFormData({ departureTime: '', price: 0, busId: '', routeId: '' });
           fetchData();
-          alert('Viagem agendada com sucesso!');
+          toast('Viagem agendada com sucesso!', 'success');
       } catch (e) {
-          alert('Erro ao criar viagem');
+          toast('Erro ao criar viagem', 'error');
       }
   };
 
@@ -83,7 +85,7 @@ export default function TripSchedulerPage() {
              setSelectedTrip(res.data);
           }
       } catch (e) {
-          alert('Erro ao atualizar status');
+          toast('Erro ao atualizar status', 'error');
       }
   };
 

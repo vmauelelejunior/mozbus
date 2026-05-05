@@ -32,6 +32,7 @@ export const metadata: Metadata = {
 
 import ConnectivityListener from "@/components/ConnectivityListener";
 import { ToastProvider } from "@/components/EliteToast";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export default function RootLayout({
   children,
@@ -41,14 +42,16 @@ export default function RootLayout({
   return (
     <html
       lang="pt-MZ"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <ToastProvider>
-          {children}
-          <ConnectivityListener />
-          <ChatSupport />
-        </ToastProvider>
+        <ThemeProvider>
+          <ToastProvider>
+            {children}
+            <ConnectivityListener />
+            <ChatSupport />
+          </ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

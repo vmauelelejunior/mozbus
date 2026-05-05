@@ -9,7 +9,7 @@ interface EliteLoaderProps {
   className?: string;
 }
 
-export default function EliteLoader({ size = 80, color = "#0ea5e9", className = "" }: EliteLoaderProps) {
+export default function EliteLoader({ size = 80, color = "var(--aura-accent)", className = "" }: EliteLoaderProps) {
   return (
     <div className={`flex flex-col items-center justify-center gap-6 ${className}`}>
       <div className="relative">
@@ -24,7 +24,7 @@ export default function EliteLoader({ size = 80, color = "#0ea5e9", className = 
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute inset-0 bg-sky-500 rounded-full blur-[50px]"
+          className="absolute inset-0 rounded-full blur-[50px]"
           style={{ width: size, height: size, backgroundColor: color }}
         />
 
@@ -109,24 +109,24 @@ export default function EliteLoader({ size = 80, color = "#0ea5e9", className = 
         transition={{ duration: 2, repeat: Infinity }}
         className="flex flex-col items-center"
       >
-        <span className="text-[10px] font-black uppercase tracking-[0.5em] text-white/40">
+        <span className="text-[10px] font-black uppercase tracking-[0.5em] text-aura-muted">
           Processando Elite
         </span>
         <div className="flex gap-1 mt-2">
             <motion.div 
                 animate={{ scale: [1, 1.5, 1] }} 
                 transition={{ repeat: Infinity, duration: 1, delay: 0 }}
-                className="w-1 h-1 bg-sky-500 rounded-full" 
+                className="w-1 h-1 bg-aura-accent rounded-full" 
             />
             <motion.div 
                 animate={{ scale: [1, 1.5, 1] }} 
                 transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}
-                className="w-1 h-1 bg-sky-500 rounded-full" 
+                className="w-1 h-1 bg-aura-accent rounded-full" 
             />
             <motion.div 
                 animate={{ scale: [1, 1.5, 1] }} 
                 transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}
-                className="w-1 h-1 bg-sky-500 rounded-full" 
+                className="w-1 h-1 bg-aura-accent rounded-full" 
             />
         </div>
       </motion.div>
