@@ -33,7 +33,8 @@
     "react-leaflet": "^5.0.0",
     "recharts": "^3.8.1",
     "serwist": "^9.5.7",
-    "tailwind-merge": "^3.5.0"
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
