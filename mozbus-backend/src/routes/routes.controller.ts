@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { RoutesService } from './routes.service';
 import { CreateRouteDto } from './dto/create-route.dto';
 import { UpdateRouteDto } from './dto/update-route.dto';
@@ -11,31 +11,31 @@ export class RoutesController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() createRouteDto: CreateRouteDto) {
-    return this.routesService.create(createRouteDto);
+  create(@Req() req: any, @Body() createRouteDto: CreateRouteDto) {
+    return this.routesService.create(createRouteDto, req.user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll() {
-    return this.routesService.findAll();
+  findAll(@Req() req: any) {
+    return this.routesService.findAll(req.user);
   }
 
-  @Public()
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.routesService.findOne(id);
+  findOne(@Req() req: any, @Param('id') id: string) {
+    return this.routesService.findOne(id, req.user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRouteDto: UpdateRouteDto) {
-    return this.routesService.update(id, updateRouteDto);
+  update(@Req() req: any, @Param('id') id: string, @Body() updateRouteDto: UpdateRouteDto) {
+    return this.routesService.update(id, updateRouteDto, req.user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.routesService.remove(id);
+  remove(@Req() req: any, @Param('id') id: string) {
+    return this.routesService.remove(id, req.user);
   }
 }

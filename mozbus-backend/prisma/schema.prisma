@@ -3,112 +3,224 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-// Em SQLite usamos String para emular Enums
-// User Roles: PASSENGER, FISCAL, COMPANY_ADMIN, SUPER_ADMIN
-// Trip Status: SCHEDULED, BOARDING, IN_TRANSIT, COMPLETED, CANCELLED
-// Ticket Status: PENDING_PAYMENT, PAID, USED, CANCELLED, REFUNDED
-
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  phone     String   @unique
-  name      String
-  password  String
-  role      String   @default("PASSENGER")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relações
-  companyId String?
-  company   Company? @relation("CompanyEmployees", fields: [companyId], references: [id])
-  tickets         Ticket[]
+  id               String    @id @default(uuid())
+  email            String    @unique
+  username         String?   @unique
+  phone            String    @unique
+  name             String
+  avatar           String?
+  password         String
+  role             UserRole  @default(PASSENGER)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+  companyId        String?
+  resetToken       String?
+  resetTokenExpires DateTime?
+  assignedBuses    Bus[]     @relation("FiscalBuses")
   companiesManaged Company[] @relation("CompanyAdmin")
-  assignedBuses   Bus[]     @relation("FiscalBuses")
+  tickets          Ticket[]
+  company          Company?  @relation("CompanyEmployees", fields: [companyId], references: [id])
 }
 
 model Company {
-  id        String   @id @default(uuid())
-  name      String
-  nuit      String   @unique
-  status    String   @default("ACTIVE")
-  commission Float    @default(0.10)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relações
-  adminId  String
-  admin    User   @relation("CompanyAdmin", fields: [adminId], references: [id])
-  
-  buses    Bus[]
-  routes   Route[]
-  employees User[] @relation("CompanyEmployees")
+  id         String        @id @default(uuid())
+  name       String
+  nuit       String        @unique
+  status     CompanyStatus @default(PENDING)
+  commission Float         @default(0.10)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  deletedAt  DateTime?
+  adminId    String
+  plan       AuraPlan      @default(BASIC)
+  buses      Bus[]
+  hardware   Hardware[]
+  admin      User          @relation("CompanyAdmin", fields: [adminId], references: [id])
+  routes     Route[]
+  employees  User[]        @relation("CompanyEmployees")
 }
 
 model Bus {
-  id        String   @id @default(uuid())
-  plate     String   @unique
+  id        String    @id @default(uuid())
+  plate     String    @unique
   model     String
   capacity  Int
-  status    String   @default("ACTIVE")
-  
+  layout    String    @default("2-2")
   companyId String
-  company   Company  @relation(fields: [companyId], references: [id])
-
   fiscalId  String?
-  fiscal    User?    @relation("FiscalBuses", fields: [fiscalId], references: [id])
-
+  status    BusStatus @default(ACTIVE)
+  deletedAt DateTime?
+  company   Company   @relation(fields: [companyId], references: [id])
+  fiscal    User?     @relation("FiscalBuses", fields: [fiscalId], references: [id])
   trips     Trip[]
 }
 
 model Route {
-  id          String   @id @default(uuid())
+  id          String  @id @default(uuid())
   origin      String
   destination String
   distanceKm  Float?
-  
+  duration    String?
   companyId   String
-  company     Company  @relation(fields: [companyId], references: [id])
-
+  deletedAt   DateTime?
+  company     Company @relation(fields: [companyId], references: [id])
   trips       Trip[]
+
+  @@index([origin])
+  @@index([destination])
 }
 
 model Trip {
   id            String     @id @default(uuid())
   departureTime DateTime
   arrivalTime   DateTime?
-  price         Decimal
-  status        String     @default("SCHEDULED")
-  seatsMapping  String?    // SQLite não suporta Json nativo
-
+  price         Decimal    @db.Decimal(10, 2)
+  status        TripStatus @default(SCHEDULED)
+  seatsMapping  Json?
+  version       Int        @default(0)
+  deletedAt     DateTime?
   busId         String
-  bus           Bus        @relation(fields: [busId], references: [id])
-
   routeId       String
+  tickets       Ticket[]
+  bus           Bus        @relation(fields: [busId], references: [id])
   route         Route      @relation(fields: [routeId], references: [id])
 
-  tickets       Ticket[]
+  @@index([departureTime])
 }
 
 model Ticket {
-  id            String       @id @default(uuid())
-  qrCode        String       @unique
-  seatNumber    Int
-  status        String       @default("PENDING_PAYMENT")
-  paymentId     String?
-  amountPaid    Decimal?
-  isBoarded     Boolean      @default(false)
-  boardedAt     DateTime?
-  
-  passengerId   String
-  passenger     User         @relation(fields: [passengerId], references: [id])
+  id          String       @id @default(uuid())
+  qrCode      String       @unique
+  seatNumber  Int
+  status      TicketStatus @default(PENDING_PAYMENT)
+  paymentId   String?
+  amountPaid  Decimal?     @db.Decimal(10, 2)
+  isBoarded   Boolean      @default(false)
+  boardedAt   DateTime?
+  passengerId String
+  tripId      String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+  luggages    Luggage[]
+  transactions Transaction[]
+  passenger   User         @relation(fields: [passengerId], references: [id])
+  trip        Trip         @relation(fields: [tripId], references: [id])
 
-  tripId        String
-  trip          Trip         @relation(fields: [tripId], references: [id])
+  @@index([passengerId])
+  @@index([tripId])
+  @@index([status])
+}
 
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+model Luggage {
+  id          String      @id @default(uuid())
+  type        LuggageType @default(HAND)
+  weight      Float?
+  description String?
+  price       Decimal     @default(0) @db.Decimal(10, 2)
+  ticketId    String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  ticket      Ticket      @relation(fields: [ticketId], references: [id])
+}
+
+enum UserRole {
+  PASSENGER
+  FISCAL
+  COMPANY_ADMIN
+  SUPER_ADMIN
+}
+
+enum CompanyStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+}
+
+enum AuraPlan {
+  BASIC
+  PREMIUM
+  ELITE
+}
+
+enum TripStatus {
+  SCHEDULED
+  BOARDING
+  IN_TRANSIT
+  COMPLETED
+  CANCELLED
+}
+
+enum TicketStatus {
+  PENDING_PAYMENT
+  PAID
+  USED
+  CANCELLED
+  REFUNDED
+}
+
+enum LuggageType {
+  HAND
+  CHECKED
+  EXTRA
+}
+
+model Hardware {
+  id          String       @id @default(uuid())
+  type        HardwareType @default(POS_TERMINAL)
+  serialNumber String      @unique
+  status      String       @default("ACTIVE")
+  companyId   String
+  createdAt   DateTime     @default(now())
+  company     Company      @relation(fields: [companyId], references: [id])
+}
+
+enum HardwareType {
+  POS_TERMINAL
+  TICKET_PRINTER
+  GPS_TRACKER
+  BIOMETRIC_SCANNER
+}
+
+enum BusStatus {
+  ACTIVE
+  MAINTENANCE
+  INACTIVE
+}
+
+model Transaction {
+  id            String            @id @default(uuid())
+  ticketId      String
+  amount        Decimal           @db.Decimal(10, 2)
+  provider      PaymentProvider   @default(MPESA)
+  reference     String?           @unique
+  status        TransactionStatus @default(PENDING)
+  webhookData   Json?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  ticket        Ticket            @relation(fields: [ticketId], references: [id])
+
+  @@index([ticketId])
+  @@index([reference])
+}
+
+enum PaymentProvider {
+  MPESA
+  EMOLA
+  CARD
+  CASH
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
 }

@@ -51,19 +51,18 @@ description: Plano de desenvolvimento MozBus - continuação do projecto do pont
 ## FASE 3 — POLISH E MELHORIAS
 
 ### Fase 3.1 — Settings Page
-- Criar página `/settings`
-- Permitir alterar nome e password do utilizador
+- [x] Criar página `/settings`
+- [x] Permitir alterar nome e password do utilizador
+- [x] Implementar design Aura Negra premium
+- [x] Fase 3.1: Implementar página de definições (/settings) (Concluído)
+- [x] Fase 3.2: Limpeza de pastas residuais (Concluído)
+- [x] Fase 3.3: Migração para SQLite local e Seed de dados (Concluído)
+- [x] Fase 3.4: Testes de integração de definições (Concluído)
 
-### Fase 3.2 — Limpar pasta duplicada
-- Eliminar `mozbus-ecessistema` (pasta com erro de digitação)
-
-### Fase 3.3 — Seed de Dados Rico
-- Actualizar `prisma/seed.ts` com dados completos:
-  - 2 empresas (Nagi Bus, Panthera Azul)
-  - 5+ rotas (Maputo-Beira, Maputo-Inhambane, etc.)
-  - 3+ autocarros por empresa
-  - 10+ viagens agendadas
-  - Contas demo: admin@mozbus.mz, fiscal@mozbus.mz, passageiro@mozbus.mz
+## Fase 4: Notificações e UX 10/10
+- [ ] Fase 4.1: Sistema de notificações em tempo real (Toast/Snackbars)
+- [ ] Fase 4.2: Loading states premium (Skeletons Aura Negra)
+- [ ] Fase 4.3: Feedback táctil e micro-animações em toda a app
 
 ## SKILLS A CRIAR
 

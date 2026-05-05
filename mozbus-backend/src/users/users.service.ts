@@ -1,13 +1,17 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { SupabaseService } from '../supabase.service';
 import * as bcrypt from 'bcrypt';
 import { User } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private supabase: SupabaseService
+  ) {}
 
-  async create(data: any): Promise<User> {
+  async create(data: any, user?: any): Promise<User> {
     const { password, email, phone, ...rest } = data;
 
     // Verificar se já existe
@@ -24,6 +28,14 @@ export class UsersService {
     // Salt rounds de elite (12)
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    let companyId = data.companyId;
+
+    if (user && user.role === 'COMPANY_ADMIN') {
+        companyId = user.companyId;
+        if (!companyId) throw new Error('Acesso negado: Administrador sem empresa.');
+        if (data.role === 'SUPER_ADMIN') throw new Error('Não pode criar administradores de topo.');
+    }
+
     return this.prisma.user.create({
       data: {
         ...rest,
@@ -31,7 +43,7 @@ export class UsersService {
         phone,
         password: hashedPassword,
         role: data.role || 'PASSENGER',
-        companyId: data.companyId || null
+        companyId: companyId || null
       }
     });
   }
@@ -49,22 +61,39 @@ export class UsersService {
     });
   }
 
+  async findByPhone(phone: string): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: { phone }
+    });
+  }
+
+  async findByUsername(username: string): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: { username }
+    });
+  }
+
   async findById(id: string): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: { id }
     });
   }
 
-  async findAll(): Promise<User[]> {
-    return this.prisma.user.findMany({});
+  async findAll(user: any): Promise<User[]> {
+    const where: any = {};
+    if (user.role === 'COMPANY_ADMIN') {
+        where.companyId = user.companyId;
+    }
+    return this.prisma.user.findMany({ where });
   }
 
-  async update(id: string, data: { name?: string; phone?: string }) {
+  async update(id: string, data: { name?: string; phone?: string; avatar?: string }) {
     return this.prisma.user.update({
       where: { id },
       data: {
         name: data.name,
         phone: data.phone,
+        avatar: data.avatar,
       }
     });
   }
@@ -80,6 +109,21 @@ export class UsersService {
     return this.prisma.user.update({
       where: { id },
       data: { password: hashed }
+    });
+  }
+
+  async updateAvatar(id: string, file: any) {
+    const fileName = `${id}-${Date.now()}-${file.originalname}`;
+    const publicUrl = await this.supabase.uploadFile(
+      'avatars',
+      fileName,
+      file.buffer,
+      file.mimetype
+    );
+
+    return this.prisma.user.update({
+      where: { id },
+      data: { avatar: publicUrl }
     });
   }
 }

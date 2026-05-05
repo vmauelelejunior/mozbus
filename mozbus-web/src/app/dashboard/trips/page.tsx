@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Users, Bus, ChevronRight, X, UserCheck, Search, Loader2, MapPin, DollarSign, Clock, Download, Power, Briefcase } from 'lucide-react';
 import api from '@/lib/api';
+import EliteLoader from '@/components/EliteLoader';
 
 export default function TripSchedulerPage() {
   const [trips, setTrips] = useState<any[]>([]);
@@ -12,6 +13,7 @@ export default function TripSchedulerPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [isMounted, setIsMounted] = useState(false);
   
   const [buses, setBuses] = useState<any[]>([]);
   const [routes, setRoutes] = useState<any[]>([]);
@@ -24,50 +26,40 @@ export default function TripSchedulerPage() {
 
   const statusOptions = [
     { value: 'ALL', label: 'Todas' },
-    { value: 'SCHEDULED', label: 'Agendadas', color: 'text-orange-500' },
+    { value: 'SCHEDULED', label: 'Agendadas', color: 'text-sky-500' },
     { value: 'BOARDING', label: 'Embarque', color: 'text-yellow-500' },
     { value: 'IN_TRANSIT', label: 'Em Trânsito', color: 'text-blue-500' },
     { value: 'COMPLETED', label: 'Concluídas', color: 'text-green-500' },
   ];
 
   const fetchData = async () => {
-      setLoading(true);
       try {
-          const storedUser = JSON.parse(localStorage.getItem('mozbus_user') || '{}');
-          const companyId = storedUser.companyId || storedUser.companiesManaged?.[0]?.id;
-
+          setLoading(true);
           const [tripsRes, busesRes, routesRes] = await Promise.all([
-              api.get('/trips/search?origin=&destination='),
-              companyId ? api.get(`/buses/company/${companyId}`) : api.get('/buses'),
-              api.get('/routes')
+              api.get('/trips').catch(err => ({ data: [] })),
+              api.get('/buses').catch(err => ({ data: [] })),
+              api.get('/routes').catch(err => ({ data: [] }))
           ]);
 
-          const filteredTrips = companyId 
-            ? tripsRes.data.filter((t: any) => t.bus.companyId === companyId)
-            : tripsRes.data;
-
-          setAllTrips(filteredTrips);
-          setTrips(filteredTrips);
-          setBuses(busesRes.data);
-          setRoutes(routesRes.data);
+          setAllTrips(Array.isArray(tripsRes.data) ? tripsRes.data : []);
+          setBuses(Array.isArray(busesRes.data) ? busesRes.data : []);
+          setRoutes(Array.isArray(routesRes.data) ? routesRes.data : []);
       } catch (e) {
-          console.error(e);
+          console.error("Critical error fetching data:", e);
       } finally {
           setLoading(false);
       }
   };
 
   useEffect(() => {
+    setIsMounted(true);
     fetchData();
   }, []);
 
-  useEffect(() => {
-    if (statusFilter === 'ALL') {
-      setTrips(allTrips);
-    } else {
-      setTrips(allTrips.filter(t => t.status === statusFilter));
-    }
-  }, [statusFilter, allTrips]);
+  const filteredTrips = React.useMemo(() => {
+    if (statusFilter === 'ALL') return allTrips;
+    return allTrips.filter(t => t.status === statusFilter);
+  }, [allTrips, statusFilter]);
 
   const handleCreate = async (e: React.FormEvent) => {
       e.preventDefault();
@@ -104,16 +96,18 @@ export default function TripSchedulerPage() {
       }
   };
 
+  if (!isMounted || loading) return <EliteLoader />;
+
   return (
-    <div className="space-y-12 pb-20">
+    <div className="space-y-12 pb-20 notranslate" translate="no">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-4xl font-black uppercase tracking-tighter italic">AGENDA DE <span className="text-orange-500">VIAGENS</span></h2>
+          <h2 className="text-4xl font-black uppercase tracking-tighter italic">AGENDA DE <span className="text-sky-500">VIAGENS</span></h2>
           <p className="opacity-50 text-[10px] font-black uppercase tracking-[0.3em] mt-3">Logística Integrada e Manifesto Digital.</p>
         </div>
         <button 
             onClick={() => setShowCreateModal(true)}
-            className="bg-orange-500 text-white px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 hover:bg-orange-400 transition-all shadow-2xl shadow-orange-500/30 active:scale-95"
+            className="bg-sky-500 text-white px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 hover:bg-sky-400 transition-all shadow-2xl shadow-sky-500/30 active:scale-95"
         >
             <Calendar size={20} /> Nova Partida
         </button>
@@ -134,27 +128,21 @@ export default function TripSchedulerPage() {
         ))}
       </div>
 
-      {loading ? (
-        <div className="h-[40vh] flex flex-col items-center justify-center">
-          <Loader2 size={40} className="animate-spin text-orange-500 opacity-20" />
-        </div>
-      ) : trips.length === 0 ? (
+      {filteredTrips.length === 0 ? (
         <div className="glass p-20 rounded-[45px] text-center opacity-30 border border-white/5">
           <Clock size={64} className="mx-auto mb-4" />
           <p className="font-black uppercase tracking-widest italic">Nenhuma viagem encontrada.</p>
         </div>
       ) : (
         <div className="grid gap-6">
-          {trips.map((trip) => (
-            <motion.div 
+          {filteredTrips.map((trip) => (
+            <div 
               key={trip.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="glass p-10 rounded-[45px] flex items-center justify-between border border-white/5 hover:border-orange-500/30 transition-all cursor-pointer group"
+              className="glass p-10 rounded-[45px] flex items-center justify-between border border-white/5 hover:border-sky-500/30 transition-all cursor-pointer group"
               onClick={() => openManifest(trip)}
             >
               <div className="flex items-center gap-12">
-                 <div className="text-center bg-black/40 border border-white/5 p-5 rounded-3xl min-w-[120px] group-hover:bg-orange-500 group-hover:border-orange-500 transition-all">
+                 <div className="text-center bg-black/40 border border-white/5 p-5 rounded-3xl min-w-[120px] group-hover:bg-sky-500 group-hover:border-sky-500 transition-all">
                     <p className="text-2xl font-black italic">
                       {new Date(trip.departureTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                     </p>
@@ -163,38 +151,38 @@ export default function TripSchedulerPage() {
                  <div className="space-y-3">
                     <div className="flex items-center gap-4">
                       <h4 className="text-2xl font-black italic uppercase tracking-tighter">
-                        {trip.route.origin} <span className="text-orange-500">→</span> {trip.route.destination}
+                        {trip.route?.origin || '---'} <span className="text-sky-500">→</span> {trip.route?.destination || '---'}
                       </h4>
                       <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-lg border ${
                         trip.status === 'COMPLETED' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
                         trip.status === 'IN_TRANSIT' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
                         trip.status === 'BOARDING' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' :
-                        'bg-orange-500/10 text-orange-500 border-orange-500/20'
+                        'bg-sky-500/10 text-sky-500 border-sky-500/20'
                       }`}>
                         {trip.status}
                       </span>
                     </div>
                     <div className="flex items-center gap-6 text-[10px] font-black uppercase tracking-widest opacity-40 italic">
-                      <p className="flex items-center gap-2 italic"><Bus size={14} className="text-orange-500" /> {trip.bus.plate} • {trip.bus.model}</p>
-                      <p className="flex items-center gap-2 italic"><Calendar size={14} className="text-orange-500" /> {new Date(trip.departureTime).toLocaleDateString()}</p>
+                      <p className="flex items-center gap-2 italic"><Bus size={14} className="text-sky-500" /> {trip.bus?.plate || 'S/V'} • {trip.bus?.model || '---'}</p>
+                      <p className="flex items-center gap-2 italic"><Calendar size={14} className="text-sky-500" /> {new Date(trip.departureTime).toLocaleDateString()}</p>
                     </div>
                  </div>
               </div>
 
               <div className="flex items-center gap-16">
                  <div className="text-right">
-                    <p className="text-2xl font-black tracking-tighter italic">{(trip.tickets?.filter((tk: any) => tk.status === 'PAID').length || 0)} <span className="text-sm opacity-30">/ {trip.bus.seats}</span></p>
+                    <p className="text-2xl font-black tracking-tighter italic">{(trip.tickets?.filter((tk: any) => tk.status === 'PAID').length || 0)} <span className="text-sm opacity-30">/ {trip.bus?.seats || 0}</span></p>
                     <p className="text-[9px] font-black uppercase opacity-40 tracking-widest mt-1 italic">OCUPAÇÃO</p>
                  </div>
                  <div className="text-right">
-                    <p className="text-2xl font-black text-white tracking-tighter italic">{trip.price.toLocaleString()} <span className="text-xs opacity-30">MT</span></p>
+                    <p className="text-2xl font-black text-white tracking-tighter italic">{trip.price?.toLocaleString() || 0} <span className="text-xs opacity-30">MT</span></p>
                     <p className="text-[9px] font-black uppercase opacity-40 tracking-widest mt-1 italic">TARIFA</p>
                  </div>
-                 <div className="bg-white/5 p-4 rounded-full group-hover:bg-orange-500 transition-all border border-white/5 group-hover:scale-110">
+                 <div className="bg-white/5 p-4 rounded-full group-hover:bg-sky-500 transition-all border border-white/5 group-hover:scale-110">
                     <ChevronRight size={24} className="group-hover:text-white" />
                  </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       )}
@@ -212,14 +200,14 @@ export default function TripSchedulerPage() {
                 <div className="px-12 py-10 border-b border-white/5 bg-white/[0.02] flex justify-between items-start">
                     <div className="space-y-4">
                         <div className="flex items-center gap-4">
-                           <h3 className="text-4xl font-black uppercase tracking-tighter italic text-orange-500">MANIFESTO #T-{selectedTrip.id.slice(-4)}</h3>
+                           <h3 className="text-4xl font-black uppercase tracking-tighter italic text-sky-500">MANIFESTO #T-{selectedTrip.id.slice(-4)}</h3>
                            <div className="bg-white/5 px-4 py-1.5 rounded-full border border-white/5 text-[10px] font-black uppercase tracking-widest opacity-40">
                               {selectedTrip.status}
                            </div>
                         </div>
                         <div className="flex items-center gap-8 text-[11px] font-black uppercase tracking-widest opacity-60">
-                           <p className="flex items-center gap-2"><MapPin size={16} className="text-orange-500" /> {selectedTrip.route.origin} → {selectedTrip.route.destination}</p>
-                           <p className="flex items-center gap-2"><Clock size={16} className="text-orange-500" /> {new Date(selectedTrip.departureTime).toLocaleString()}</p>
+                           <p className="flex items-center gap-2"><MapPin size={16} className="text-sky-500" /> {selectedTrip.route.origin} → {selectedTrip.route.destination}</p>
+                           <p className="flex items-center gap-2"><Clock size={16} className="text-sky-500" /> {new Date(selectedTrip.departureTime).toLocaleString()}</p>
                         </div>
                     </div>
                     <div className="flex gap-4">
@@ -232,13 +220,13 @@ export default function TripSchedulerPage() {
                                   e.stopPropagation();
                                   updateTripStatus(selectedTrip.id, opt.value);
                                 }}
-                                className={`px-4 py-2 rounded-xl text-[8px] font-black uppercase transition-all ${selectedTrip.status === opt.value ? 'bg-orange-500 text-white' : 'hover:bg-white/5 opacity-40'}`}
+                                className={`px-4 py-2 rounded-xl text-[8px] font-black uppercase transition-all ${selectedTrip.status === opt.value ? 'bg-sky-500 text-white' : 'hover:bg-white/5 opacity-40'}`}
                              >
                                 {opt.label}
                              </button>
                           ))}
                        </div>
-                       <button onClick={() => setSelectedTrip(null)} className="p-4 bg-white/5 rounded-2xl hover:text-orange-500 transition-all">
+                       <button onClick={() => setSelectedTrip(null)} className="p-4 bg-white/5 rounded-2xl hover:text-sky-500 transition-all">
                           <X size={28} />
                        </button>
                     </div>
@@ -247,14 +235,14 @@ export default function TripSchedulerPage() {
                 {/* Conteúdo do Manifesto */}
                 <div className="flex-1 overflow-y-auto p-12 grid lg:grid-cols-3 gap-12">
                     <div className="lg:col-span-2 space-y-8">
-                       <h4 className="text-xl font-black uppercase tracking-tighter italic border-l-4 border-orange-500 pl-4">LISTA DE PASSAGEIROS</h4>
+                       <h4 className="text-xl font-black uppercase tracking-tighter italic border-l-4 border-sky-500 pl-4">LISTA DE PASSAGEIROS</h4>
                        
                        <div className="space-y-4">
                           {selectedTrip.tickets && selectedTrip.tickets.filter((tk: any) => tk.status === 'PAID').length > 0 ? (
                              selectedTrip.tickets.filter((tk: any) => tk.status === 'PAID').map((ticket: any) => (
                                <div key={ticket.id} className="glass p-6 rounded-3xl border border-white/5 flex items-center justify-between hover:bg-white/5 transition-all">
                                   <div className="flex items-center gap-8">
-                                     <div className="bg-orange-500/10 text-orange-500 w-16 h-16 rounded-2xl flex flex-col items-center justify-center">
+                                     <div className="bg-sky-500/10 text-sky-500 w-16 h-16 rounded-2xl flex flex-col items-center justify-center">
                                        <span className="text-2xl font-black italic">{ticket.seatNumber}</span>
                                        <span className="text-[8px] font-bold uppercase opacity-50">Assento</span>
                                      </div>
@@ -272,7 +260,7 @@ export default function TripSchedulerPage() {
                                           <UserCheck size={14} /> Embarcado
                                         </div>
                                      ) : (
-                                        <div className="text-orange-500/40 font-black text-[10px] uppercase italic">Pendente embarque</div>
+                                        <div className="text-sky-500/40 font-black text-[10px] uppercase italic">Pendente embarque</div>
                                      )}
                                   </div>
                                </div>
@@ -287,12 +275,12 @@ export default function TripSchedulerPage() {
                     </div>
 
                     <div className="space-y-8">
-                       <h4 className="text-xl font-black uppercase tracking-tighter italic border-l-4 border-orange-500 pl-4">DETALHES OPERACIONAIS</h4>
-                       <div className="glass p-8 rounded-[40px] space-y-8 border border-white/5 bg-orange-500/[0.02]">
+                       <h4 className="text-xl font-black uppercase tracking-tighter italic border-l-4 border-sky-500 pl-4">DETALHES OPERACIONAIS</h4>
+                       <div className="glass p-8 rounded-[40px] space-y-8 border border-white/5 bg-sky-500/[0.02]">
                           <div className="space-y-2">
                              <p className="text-[10px] font-black uppercase opacity-30 tracking-[0.2em]">AUTOCARRO ASSIGNADO</p>
                              <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl">
-                                <div className="text-orange-500"><Bus size={24} /></div>
+                                <div className="text-sky-500"><Bus size={24} /></div>
                                 <p className="font-black text-sm uppercase">{selectedTrip.bus.plate} • {selectedTrip.bus.model}</p>
                              </div>
                           </div>
@@ -339,7 +327,7 @@ ASSINATURA DESPACHANTE: _________________________
                               link.download = `manifesto_${selectedTrip.id.slice(-6)}.txt`;
                               link.click();
                             }}
-                            className="w-full bg-white text-black py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.4em] flex items-center justify-center gap-3 hover:bg-orange-500 hover:text-white transition-all shadow-xl active:scale-95"
+                            className="w-full bg-white text-black py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.4em] flex items-center justify-center gap-3 hover:bg-sky-500 hover:text-white transition-all shadow-xl active:scale-95"
                           >
                              <Download size={18} /> Baixar Manifesto TXT
                           </button>
@@ -366,10 +354,10 @@ ASSINATURA DESPACHANTE: _________________________
              >
                 <div className="flex justify-between items-center">
                     <div className="space-y-1">
-                      <h3 className="text-3xl font-black uppercase tracking-tighter italic">AGENDAR <span className="text-orange-500">NOVA VIAGEM</span></h3>
+                      <h3 className="text-3xl font-black uppercase tracking-tighter italic">AGENDAR <span className="text-sky-500">NOVA VIAGEM</span></h3>
                       <p className="text-[10px] font-black uppercase tracking-widest opacity-20">Certifique-se da disponibilidade da viatura.</p>
                     </div>
-                    <button onClick={() => setShowCreateModal(false)} className="text-white/20 hover:text-orange-500 transition-all">
+                    <button onClick={() => setShowCreateModal(false)} className="text-white/20 hover:text-sky-500 transition-all">
                         <X size={32} />
                     </button>
                 </div>
@@ -380,7 +368,7 @@ ASSINATURA DESPACHANTE: _________________________
                             <label className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">VIATURA</label>
                             <select 
                                 required
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 outline-none focus:border-orange-500/50 font-black uppercase text-xs"
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 outline-none focus:border-sky-500/50 font-black uppercase text-xs"
                                 value={formData.busId}
                                 onChange={e => setFormData({...formData, busId: e.target.value})}
                             >
@@ -394,7 +382,7 @@ ASSINATURA DESPACHANTE: _________________________
                             <label className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">ROTA</label>
                             <select 
                                 required
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 outline-none focus:border-orange-500/50 font-black uppercase text-xs"
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 outline-none focus:border-sky-500/50 font-black uppercase text-xs"
                                 value={formData.routeId}
                                 onChange={e => setFormData({...formData, routeId: e.target.value})}
                             >
@@ -412,7 +400,7 @@ ASSINATURA DESPACHANTE: _________________________
                             <input 
                                 required
                                 type="datetime-local"
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 outline-none focus:border-orange-500/50 font-black text-xs"
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 outline-none focus:border-sky-500/50 font-black text-xs"
                                 value={formData.departureTime}
                                 onChange={e => setFormData({...formData, departureTime: e.target.value})}
                             />
@@ -423,16 +411,16 @@ ASSINATURA DESPACHANTE: _________________________
                                 required
                                 type="number"
                                 placeholder="800"
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 outline-none focus:border-orange-500/50 font-black text-orange-500"
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 outline-none focus:border-sky-500/50 font-black text-sky-500"
                                 value={formData.price}
-                                onChange={e => setFormData({...formData, price: parseInt(e.target.value)})}
+                                onChange={e => setFormData({...formData, price: parseInt(e.target.value) || 0})}
                             />
                         </div>
                     </div>
 
                     <button 
                         type="submit"
-                        className="w-full bg-orange-500 text-white py-6 rounded-2xl font-black text-xs uppercase tracking-[0.4em] hover:bg-orange-400 transition-all shadow-2xl shadow-orange-500/30 active:scale-95"
+                        className="w-full bg-sky-500 text-white py-6 rounded-2xl font-black text-xs uppercase tracking-[0.4em] hover:bg-sky-400 transition-all shadow-2xl shadow-sky-500/30 active:scale-95"
                     >
                         Publicar Partida
                     </button>

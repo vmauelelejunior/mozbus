@@ -1,4 +1,5 @@
-import { Controller, Get, Param, UseGuards, Patch, Body, Post } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards, Patch, Body, Post, Req, UseInterceptors, UploadedFile, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { UsersService } from './users.service';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt.guard';
@@ -9,11 +10,35 @@ import { Public } from '../auth/public.decorator';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Public()
+  @UseGuards(JwtAuthGuard)
+  @Post('avatar/upload/:id')
+  @ApiOperation({ summary: 'Carregar foto de perfil' })
+  @UseInterceptors(FileInterceptor('file', {
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+  }))
+  async uploadAvatar(@Param('id') id: string, @UploadedFile() file: any) {
+    if (!file) {
+      throw new BadRequestException('Nenhum ficheiro detectado.');
+    }
+    try {
+      return await this.usersService.updateAvatar(id, file);
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get()
   @ApiOperation({ summary: 'Listar todos os utilizadores' })
-  findAll() {
-    return this.usersService.findAll();
+  findAll(@Req() req: any) {
+    return this.usersService.findAll(req.user);
+  }
+
+  @Public()
+  @Get('phone/:phone')
+  @ApiOperation({ summary: 'Obter utilizador por telefone' })
+  findByPhone(@Param('phone') phone: string) {
+    return this.usersService.findByPhone(phone);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -26,8 +51,8 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Post()
   @ApiOperation({ summary: 'Criar novo utilizador (Gestão)' })
-  create(@Body() data: any) {
-    return this.usersService.create(data);
+  create(@Req() req: any, @Body() data: any) {
+    return this.usersService.create(data, req.user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -50,4 +75,5 @@ export class UsersController {
   changePassword(@Body() body: { userId: string; currentPassword: string; newPassword: string }) {
     return this.usersService.changePassword(body.userId, body.currentPassword, body.newPassword);
   }
+
 }

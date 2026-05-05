@@ -19,14 +19,15 @@ export default function TicketDemoPage() {
   };
 
   return (
-    <main className="min-h-screen hero-gradient p-12 text-white flex items-center justify-center">
+    <main className="min-h-screen p-12 text-white flex items-center justify-center relative">
+      <div className="aura-bg-main" />
       <div className="max-w-xl w-full space-y-8">
         
         <div className="text-center space-y-4">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="bg-green-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-xl">
                 <CheckCircle size={32} />
             </motion.div>
-            <h1 className="text-3xl font-black uppercase tracking-tighter">Demonstração de <span className="text-orange-500">BILHETE</span></h1>
+            <h1 className="text-3xl font-black uppercase tracking-tighter">Demonstração de <span className="text-sky-500">BILHETE</span></h1>
         </div>
 
         <motion.div initial={{ y: 20 }} animate={{ y: 0 }} className="bg-white text-black rounded-[40px] overflow-hidden shadow-2xl relative">
@@ -47,7 +48,7 @@ export default function TicketDemoPage() {
                         <p className="text-[10px] font-black opacity-30 uppercase">Origem</p>
                         <p className="text-xl font-black">{mockTicket.trip.route.origin}</p>
                     </div>
-                    <Bus size={24} className="text-orange-500 opacity-20" />
+                    <Bus size={24} className="text-sky-500 opacity-20" />
                     <div>
                         <p className="text-[10px] font-black opacity-30 uppercase">Destino</p>
                         <p className="text-xl font-black">{mockTicket.trip.route.destination}</p>
@@ -55,7 +56,7 @@ export default function TicketDemoPage() {
                 </div>
 
                 <div className="bg-zinc-50 rounded-3xl p-8 flex flex-col items-center justify-center space-y-4 border border-zinc-100">
-                    <div className="bg-white p-4 rounded-2xl shadow-sm border-2 border-orange-500/10">
+                    <div className="bg-white p-4 rounded-2xl shadow-sm border-2 border-sky-500/10">
                         <QRCodeSVG value={mockTicket.qrCode} size={150} level="H" includeMargin={true} />
                     </div>
                     <p className="text-[8px] font-black uppercase opacity-40 tracking-[0.3em]">Validado pelo Ecossistema MozBus</p>
@@ -65,7 +66,7 @@ export default function TicketDemoPage() {
             <div className="bg-black text-white p-6 px-8 flex justify-between items-center">
                 <div>
                     <p className="text-[8px] font-black uppercase opacity-40">Assento</p>
-                    <p className="text-lg font-black text-orange-500">{mockTicket.seatNumber}</p>
+                    <p className="text-lg font-black text-sky-500">{mockTicket.seatNumber}</p>
                 </div>
                 <div className="text-right">
                     <p className="text-[8px] font-black uppercase opacity-40">Status</p>

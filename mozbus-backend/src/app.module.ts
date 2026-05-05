@@ -7,6 +7,8 @@ import { BusesModule } from './buses/buses.module';
 import { RoutesModule } from './routes/routes.module';
 import { TripsModule } from './trips/trips.module';
 import { TicketsModule } from './tickets/tickets.module';
+import { WhatsAppModule } from './whatsapp/whatsapp.module';
+import { FinanceModule } from './finance/finance.module';
 import { PrismaModule } from './prisma.module';
 import { SystemController } from './system.controller';
 import { JwtAuthGuard } from './auth/jwt.guard';
@@ -21,6 +23,8 @@ import { JwtAuthGuard } from './auth/jwt.guard';
     RoutesModule,
     TripsModule,
     TicketsModule,
+    WhatsAppModule,
+    FinanceModule,
   ],
   controllers: [SystemController],
   providers: [
@@ -31,3 +35,4 @@ import { JwtAuthGuard } from './auth/jwt.guard';
   ],
 })
 export class AppModule {}
+

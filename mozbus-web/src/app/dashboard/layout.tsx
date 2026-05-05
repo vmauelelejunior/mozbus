@@ -2,9 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Bus, Map, Calendar, Users, Settings, LogOut, Bell, Search, Hexagon, ShieldCheck, Zap } from 'lucide-react';
+import { 
+  LayoutDashboard, Bus, Map, Calendar, Users, 
+  Settings, LogOut, Bell, Search, Hexagon, 
+  ShieldCheck, Zap, Compass, Activity, Menu, X, CreditCard
+} from 'lucide-react';
+import NotificationPrompt from '@/components/NotificationPrompt';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import EliteLoader from '@/components/EliteLoader';
 
 interface User {
   id: string;
@@ -25,9 +31,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    setIsMounted(true);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted && typeof window !== 'undefined') {
       const storedUser = localStorage.getItem('mozbus_user');
       if (storedUser) {
         try {
@@ -44,7 +58,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.push('/auth/login');
       }
     }
-  }, [router]);
+  }, [isMounted, router]);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -56,59 +70,84 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const allItems = [
-    { icon: LayoutDashboard, label: 'Analytics', href: '/dashboard/overview', roles: ['SUPER_ADMIN', 'COMPANY_ADMIN', 'FISCAL'] },
-    { icon: Bus, label: 'Frota', href: '/dashboard/buses', roles: ['SUPER_ADMIN', 'COMPANY_ADMIN'] },
-    { icon: Map, label: 'Rotas', href: '/dashboard/routes', roles: ['SUPER_ADMIN', 'COMPANY_ADMIN'] },
-    { icon: Calendar, label: 'Logística', href: '/dashboard/trips', roles: ['SUPER_ADMIN', 'COMPANY_ADMIN'] },
-    { icon: Users, label: 'Staff', href: '/dashboard/staff', roles: ['SUPER_ADMIN', 'COMPANY_ADMIN'] },
-    { icon: Zap, label: 'Validação', href: '/fiscal', roles: ['FISCAL', 'SUPER_ADMIN'] },
+    { icon: Compass, label: 'Market Intelligence', href: '/dashboard/overview', roles: ['SUPER_ADMIN'] },
+    { icon: CreditCard, label: 'Gestão Financeira', href: '/dashboard/finance', roles: ['SUPER_ADMIN'] },
+    { icon: Compass, label: 'Analytics', href: '/dashboard/overview', roles: ['COMPANY_ADMIN'] },
+    { icon: Hexagon, label: 'Rede Global', href: '/dashboard/companies', roles: ['SUPER_ADMIN'] },
+    { icon: Bus, label: 'Frota', href: '/dashboard/buses', roles: ['COMPANY_ADMIN'] },
+    { icon: Map, label: 'Rotas', href: '/dashboard/routes', roles: ['COMPANY_ADMIN'] },
+    { icon: Calendar, label: 'Logística', href: '/dashboard/trips', roles: ['COMPANY_ADMIN'] },
+    { icon: Users, label: 'Staff Hub', href: '/dashboard/staff', roles: ['COMPANY_ADMIN'] },
+    { icon: Activity, label: 'Operação de Campo', href: '/fiscal', roles: ['FISCAL'] },
+    { icon: Settings, label: 'Configurações', href: '/settings', roles: ['SUPER_ADMIN', 'COMPANY_ADMIN', 'FISCAL'] },
   ];
 
   const menuItems = allItems.filter(item => user && item.roles.includes(user.role));
 
-  if (!user) return null;
+  if (!isMounted || loading || !user) return <EliteLoader />;
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex overflow-hidden">
-      {/* Sidebar Aura Negra */}
-      <aside className="w-80 bg-zinc-950/20 backdrop-blur-3xl border-r border-white/5 p-10 flex flex-col justify-between sticky top-0 h-screen z-50">
-        <div className="space-y-16">
-          {/* Logo Premium */}
+    <div className="min-h-screen bg-background text-slate-200 flex overflow-hidden selection:bg-sky-500/30 notranslate" translate="no">
+      <div className="aura-bg-main" />
+      
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar Ultra Absolute */}
+      <aside className={`
+        fixed xl:sticky top-0 h-screen z-[70] transition-transform duration-500 ease-in-out
+        w-72 glass-aura border-r border-white/5 p-6 xl:p-10 flex flex-col justify-between
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full xl:translate-x-0'}
+      `}>
+        <button 
+          onClick={() => setIsSidebarOpen(false)}
+          className="absolute top-8 right-8 text-white/40 hover:text-white xl:hidden"
+        >
+          <X size={24} />
+        </button>
+        <div className="space-y-20">
+          {/* Logo Elite */}
           <div className="flex items-center gap-4 group cursor-pointer">
             <div className="relative">
-              <div className="bg-orange-500 p-3 rounded-2xl text-white shadow-[0_0_40px_rgba(249,115,22,0.3)] group-hover:scale-110 transition-transform duration-500">
-                <Bus size={24} strokeWidth={3} />
+              <div className="bg-sky-500 p-3 rounded-2xl text-black shadow-[0_15px_40px_rgba(14,165,233,0.3)] group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                <Bus size={22} strokeWidth={3} />
               </div>
-              <div className="absolute -inset-2 bg-orange-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
             <div>
-              <span className="text-2xl font-black uppercase tracking-tighter leading-none block">
-                MOZ<span className="text-orange-500">BUS</span>
+              <span className="text-xl font-black uppercase tracking-tighter leading-none block text-white">
+                MOZ<span className="text-sky-500">BUS</span>
               </span>
-              <span className="text-[8px] font-black uppercase tracking-[0.4em] text-white/30">Connect Pro</span>
+              <span className="text-[7px] font-black uppercase tracking-[0.4em] text-white/20 group-hover:text-sky-500 transition-colors">Ultra Absolute</span>
             </div>
           </div>
 
           {/* Navigation System */}
-          <nav className="space-y-3">
+          <nav className="space-y-2">
             {menuItems.map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link key={item.label} href={item.href}>
                   <motion.div 
-                    whileHover={{ x: 8 }}
-                    className={`flex items-center gap-4 px-6 py-5 rounded-[22px] transition-all relative group
+                    whileHover={{ x: 6 }}
+                    className={`flex items-center gap-4 px-5 py-4 rounded-xl transition-all relative group
                     ${isActive 
-                      ? 'bg-orange-500 text-white shadow-2xl shadow-orange-500/20 font-black italic' 
-                      : 'text-white/30 hover:text-white hover:bg-white/5 font-black uppercase'}`}
+                      ? 'bg-sky-500/10 text-white font-black border border-sky-500/30 shadow-[0_10px_30px_rgba(14,165,233,0.1)]' 
+                      : 'text-white/10 hover:text-white/40 font-black'}`}
                   >
-                    <item.icon size={20} strokeWidth={isActive ? 3 : 2} />
-                    <span className="text-[10px] tracking-[0.3em] uppercase">{item.label}</span>
+                    <item.icon size={18} strokeWidth={isActive ? 3 : 1.5} className={isActive ? 'text-sky-500' : ''} />
+                    <span className="text-[9px] tracking-[0.2em] uppercase">{item.label}</span>
                     {isActive && (
-                      <motion.div 
-                        layoutId="active-nav-dot"
-                        className="absolute right-6 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_10px_white]"
-                      />
+                      <div className="absolute left-0 w-1 h-5 bg-sky-500 rounded-full shadow-[0_0_10px_#0EA5E9]" />
                     )}
                   </motion.div>
                 </Link>
@@ -118,72 +157,75 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* User Card Sidebar */}
-        <div className="space-y-8">
-             <div className="glass p-6 rounded-[35px] border border-white/5 bg-white/[0.02] flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500">
-                   <ShieldCheck size={24} />
-                </div>
-                <div className="flex-1 overflow-hidden">
-                   <p className="text-[8px] font-black uppercase tracking-[0.2em] opacity-30 mb-1">Status Licença</p>
-                   <p className="text-[10px] font-black uppercase tracking-widest truncate">Corporate Elite</p>
-                </div>
-             </div>
+         <div className="space-y-6">
+              <div className="glass-aura p-4 flex items-center gap-4 border border-white/5 rounded-2xl">
+                 <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-500 border border-sky-500/20">
+                    <ShieldCheck size={20} />
+                 </div>
+                 <div className="flex-1 overflow-hidden">
+                    <p className="text-[7px] font-black uppercase tracking-[0.2em] text-white/20 mb-1">Licença</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest truncate text-sky-500">Corporate Absolute</p>
+                 </div>
+              </div>
 
-             <div className="pt-8 border-t border-white/5 space-y-4">
-                 <button 
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-4 px-6 py-4 text-red-500/50 hover:text-red-500 font-black text-[10px] uppercase tracking-[0.3em] transition-all hover:bg-red-500/5 rounded-2xl"
-                 >
-                    <LogOut size={18} /> Encerrar Sessão
-                 </button>
-             </div>
-        </div>
+              <button 
+                 onClick={handleLogout}
+                 className="w-full flex items-center gap-4 px-5 py-4 text-white/10 hover:text-rose-500 font-black text-[9px] uppercase tracking-[0.3em] transition-all hover:bg-rose-500/5 rounded-xl group"
+              >
+                 <LogOut size={16} className="group-hover:rotate-12 transition-transform" /> Logout
+              </button>
+         </div>
       </aside>
 
       {/* Main Viewport */}
       <main className="flex-1 flex flex-col h-screen relative">
-        {/* Background Decorative Glow */}
-        <div className="absolute top-0 right-0 w-[80vw] h-[80vh] bg-orange-500/5 blur-[150px] -z-10 pointer-events-none"></div>
-        
         {/* Superior Control Center */}
-        <header className="px-16 py-10 flex justify-between items-center z-40 bg-transparent">
-           <div className="relative group w-[500px]">
-              <Search className="absolute left-6 top-5 text-white/10 group-focus-within:text-orange-500 transition-colors" size={20} />
-              <input 
-                type="text" 
-                placeholder="PROCURAR NA REDE MOZBUS..." 
-                className="w-full bg-white/[0.03] border border-white/5 rounded-[25px] py-5 pl-16 pr-6 outline-none focus:border-orange-500/30 transition-all font-black text-[11px] tracking-widest uppercase placeholder:opacity-20"
-              />
-           </div>
+        <header className="px-6 xl:px-12 py-5 xl:py-8 flex justify-between items-center z-40 relative">
+            <div className="flex items-center gap-6">
+                <button 
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="xl:hidden bg-white/5 p-2 rounded-lg border border-white/10 text-sky-500"
+                >
+                  <Menu size={20} />
+                </button>
+                <div className="relative group w-full md:w-[350px] hidden sm:block">
+                   <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-sky-500 transition-colors" size={16} />
+                   <input 
+                     type="text" 
+                     placeholder="BUSCAR NO ECOSSISTEMA..." 
+                     className="w-full bg-black/40 border border-white/5 rounded-xl py-3 pl-14 pr-8 outline-none focus:border-sky-500/50 focus:bg-black/60 transition-all font-black text-[8px] xl:text-[9px] tracking-[0.2em] uppercase placeholder:text-white/5 text-white"
+                   />
+                </div>
+            </div>
 
-           <div className="flex items-center gap-10">
-              <div className="flex items-center gap-3">
-                 <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_#22c55e]"></div>
-                 <span className="text-[9px] font-black uppercase tracking-[0.4em] opacity-40">System Online</span>
-              </div>
-              
-              <button className="relative bg-white/5 p-4 rounded-2xl hover:bg-white/10 transition-all border border-white/5">
-                 <Bell size={22} />
-                 <span className="absolute top-4 right-4 w-2 h-2 bg-orange-500 rounded-full shadow-[0_0_8px_rgba(249,115,22,1)]"></span>
-              </button>
+            <div className="flex items-center gap-6 lg:gap-8">
+               <div className="hidden md:flex items-center gap-3 bg-white/[0.03] px-4 py-2 rounded-lg border border-white/5">
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_#10B981] animate-pulse"></div>
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">GRID ESTÁVEL</span>
+               </div>
+               
+               <button className="relative bg-white/5 p-3 rounded-xl hover:bg-white/10 transition-all border border-white/5 group">
+                  <Bell size={18} className="text-white/30 group-hover:text-white" />
+                  <span className="absolute top-3 right-3 w-2 h-2 bg-sky-500 rounded-full shadow-[0_0_10px_#0EA5E9] border-2 border-background"></span>
+               </button>
 
-              <div className="flex items-center gap-6 group cursor-pointer pl-6 border-l border-white/5">
-                 <div className="text-right">
-                    <p className="text-[11px] font-black uppercase tracking-tighter italic">{user.name}</p>
-                    <p className="text-[9px] text-orange-500 font-black uppercase tracking-widest mt-1 opacity-60 italic">{roleLabels[user.role] || user.role}</p>
-                 </div>
-                 <div className="w-16 h-16 rounded-[22px] bg-gradient-to-tr from-white/5 to-white/10 p-0.5 group-hover:from-orange-500 group-hover:to-orange-400 transition-all duration-500 relative">
-                    <div className="w-full h-full rounded-[20px] bg-[#050505] flex items-center justify-center font-black text-white text-lg italic tracking-widest overflow-hidden">
-                      {getInitials(user.name)}
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 bg-green-500 border-4 border-[#050505] w-5 h-5 rounded-full"></div>
-                 </div>
-              </div>
-           </div>
+               <div className="flex items-center gap-4 group cursor-pointer xl:pl-8 xl:border-l xl:border-white/10">
+                  <div className="text-right hidden md:block">
+                     <p className="text-[10px] font-black uppercase tracking-tighter text-white group-hover:text-sky-400 transition-colors">{user.name}</p>
+                     <p className="text-[8px] text-sky-500 font-black uppercase tracking-[0.2em] mt-1">{roleLabels[user.role] || user.role}</p>
+                  </div>
+                  <div className="w-9 h-9 xl:w-11 xl:h-11 rounded-xl bg-gradient-to-tr from-sky-500/20 to-sky-500/40 p-0.5 group-hover:from-sky-500 group-hover:to-emerald-400 transition-all duration-700 relative shadow-2xl">
+                     <div className="w-full h-full rounded-[10px] bg-background flex items-center justify-center font-black text-white text-[9px] xl:text-xs tracking-widest">
+                       {getInitials(user.name)}
+                     </div>
+                     <div className="absolute -bottom-0.5 -right-0.5 bg-emerald-500 border-2 border-background w-2.5 h-2.5 rounded-full shadow-lg"></div>
+                  </div>
+               </div>
+            </div>
         </header>
 
         {/* Dynamic Canvas */}
-        <div className="flex-1 overflow-y-auto px-16 py-8 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto px-4 md:px-10 xl:px-16 py-6 lg:py-8 custom-scrollbar relative z-10">
             {children}
         </div>
       </main>

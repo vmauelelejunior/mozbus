@@ -32,6 +32,19 @@ async function main() {
     create: { email: 'passageiro@mozbus.mz', name: 'Maria Sousa', phone: '840000004', password: hashedPassageiro, role: 'PASSENGER' }
   });
 
+  await prisma.user.upsert({
+    where: { email: 'op_junta@mozbus.mz' },
+    update: { password: hashedAdmin, username: 'op_junta' },
+    create: { 
+      email: 'op_junta@mozbus.mz', 
+      username: 'op_junta', 
+      name: 'Operador Junta 01', 
+      phone: '840000005', 
+      password: hashedAdmin, 
+      role: 'COMPANY_ADMIN' 
+    }
+  });
+
   console.log('✅ Passwords atualizadas com sucesso!');
   console.log('   Passageiro: passageiro123');
   console.log('   Gestor: gestor123');

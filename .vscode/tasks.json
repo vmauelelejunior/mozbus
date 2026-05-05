@@ -1,0 +1,49 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "🚀 MOZBUS: INICIAR TUDO (Full Ecosystem)",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"taskkill /F /IM node.exe 2>$null; cd mozbus-backend; node fix-passwords.js; npx prisma db push; Start-Process powershell -ArgumentList '-NoExit', '-Command', 'npm run start:dev'; cd ../mozbus-web; npm run dev"
+			],
+			"group": "test",
+			"presentation": {
+				"reveal": "always",
+				"panel": "new"
+			}
+		},
+		{
+			"label": "🛠️ MOZBUS: CORRIGIR DB E PASSWORDS",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-Command",
+				"cd mozbus-backend; node fix-passwords.js; npx prisma db push"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "💀 MOZBUS: MATAR TUDO (Kill Node)",
+			"type": "shell",
+			"command": "taskkill /F /IM node.exe",
+			"problemMatcher": []
+		},
+		{
+			"type": "npm",
+			"script": "build",
+			"path": "mozbus-web",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": [],
+			"label": "npm: build - mozbus-web",
+			"detail": "next build --webpack"
+		}
+	]
+}

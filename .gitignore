@@ -32,3 +32,9 @@ Thumbs.db
 # Misc
 .vercel
 .turbo
+*.log
+scratch/
+test-*.js
+mozbus-web/logs.txt
+mozbus-web/logs_utf8.txt
+mozbus-web/lighthouse-report.json

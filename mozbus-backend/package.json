@@ -20,9 +20,11 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seed_scenarios.ts"
   },
   "dependencies": {
+    "@ai-sdk/groq": "^3.0.38",
+    "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.2",
@@ -30,12 +32,17 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.2.7",
     "@prisma/client": "^5.22.0",
+    "@supabase/supabase-js": "^2.104.0",
     "@types/bcrypt": "^6.0.0",
     "@types/passport-jwt": "^4.0.1",
+    "ai": "^6.0.174",
     "bcrypt": "^6.0.0",
+    "bullmq": "^5.76.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "dotenv": "^17.4.2",
+    "groq-sdk": "^1.1.2",
+    "ngrok": "^5.0.0-beta.2",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "prisma": "^5.22.0",

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards, Req } from '@nestjs/common';
 import { BusesService } from './buses.service';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt.guard';
@@ -12,39 +12,39 @@ export class BusesController {
   @UseGuards(JwtAuthGuard)
   @Post()
   @ApiOperation({ summary: 'Cadastrar nova viatura' })
-  create(@Body() data: any) {
-    return this.busesService.create(data);
+  create(@Req() req: any, @Body() data: any) {
+    return this.busesService.create(data, req.user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get()
   @ApiOperation({ summary: 'Listar toda a frota' })
-  findAll() {
-    return this.busesService.findAll();
+  findAll(@Req() req: any) {
+    return this.busesService.findAll(req.user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('company/:companyId')
   @ApiOperation({ summary: 'Listar frotas por empresa' })
-  findByCompany(@Param('companyId') companyId: string) {
-    return this.busesService.findByCompany(companyId);
+  findByCompany(@Req() req: any, @Param('companyId') companyId: string) {
+    return this.busesService.findByCompany(companyId, req.user);
   }
 
   @Public()
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.busesService.findOne(id);
+  findOne(@Req() req: any, @Param('id') id: string) {
+    return this.busesService.findOne(id, req?.user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() data: any) {
-    return this.busesService.update(id, data);
+  update(@Req() req: any, @Param('id') id: string, @Body() data: any) {
+    return this.busesService.update(id, data, req.user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.busesService.remove(id);
+  remove(@Req() req: any, @Param('id') id: string) {
+    return this.busesService.remove(id, req.user);
   }
 }

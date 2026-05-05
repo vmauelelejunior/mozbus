@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Plus, Navigation2, MoreVertical, X, Loader2, Trash2, ArrowRight } from 'lucide-react';
+import { MapPin, Plus, Navigation2, X, Loader2, Trash2, ArrowRight, Zap, Globe } from 'lucide-react';
 import api from '@/lib/api';
+import EliteLoader from '@/components/EliteLoader';
 
 interface RouteData {
   id: string;
@@ -47,14 +48,13 @@ export default function RoutesPage() {
       setShowCreateModal(false);
       setFormData({ origin: '', destination: '', distance: '', duration: '' });
       fetchRoutes();
-      alert('Rota criada com sucesso!');
     } catch (e: any) {
       alert(e.response?.data?.message || 'Erro ao criar rota');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem a certeza que deseja remover esta rota?')) return;
+    if (!confirm('Esta rota será removida do atlas de navegação. Confirmar?')) return;
     try {
       await api.delete(`/routes/${id}`);
       fetchRoutes();
@@ -64,121 +64,149 @@ export default function RoutesPage() {
   };
 
   return (
-    <div className="space-y-12 pb-20">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-4xl font-black uppercase tracking-tighter italic">GESTÃO DE <span className="text-orange-500">ROTAS</span></h2>
-          <p className="opacity-50 text-[10px] font-black uppercase tracking-[0.3em] mt-3">
-            {routes.length} Destinos Mapeados
-          </p>
-        </div>
-        <button 
-          onClick={() => setShowCreateModal(true)}
-          className="bg-white text-black px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 shadow-2xl hover:bg-orange-500 hover:text-white transition-all active:scale-95"
+    <div className="relative min-h-screen space-y-16 pb-32 p-8 notranslate" translate="no">
+      <div className="aura-bg-main" />
+
+      {/* Header Elite */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative z-10">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
         >
-            <Plus size={20} /> Nova Rota
-        </button>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="h-px w-8 bg-sky-500/50"></div>
+            <span className="text-[10px] font-black uppercase tracking-[0.5em] text-sky-500">Atlas de Navegação</span>
+          </div>
+          <h2 className="text-5xl font-black uppercase tracking-tighter italic">
+            Rede de <span className="text-sky-500 glow-text">Caminhos</span>
+          </h2>
+          <p className="opacity-40 text-xs font-medium mt-2 max-w-sm">
+            Mapeamento geográfico de destinos inter-provinciais. Total de <span className="text-white font-bold">{routes.length}</span> trajectos activos.
+          </p>
+        </motion.div>
+
+        <div className="flex gap-4">
+          <button 
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-3 bg-sky-500/10 border border-sky-500/20 text-sky-400 px-8 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-sky-500 hover:text-white transition-all shadow-[0_0_30px_rgba(14,165,233,0.1)] active:scale-95"
+          >
+            <Plus size={16} strokeWidth={3} /> Nova Rota
+          </button>
+        </div>
       </div>
 
-      {loading ? (
-        <div className="h-[40vh] flex flex-col items-center justify-center space-y-4">
-          <Loader2 size={40} className="animate-spin text-orange-500 opacity-20" />
-        </div>
-      ) : routes.length === 0 ? (
-        <div className="glass p-20 rounded-[40px] text-center space-y-6 border border-white/5 opacity-40">
-           <MapPin size={64} className="mx-auto" />
-           <p className="font-black uppercase tracking-widest italic">Nenhuma rota definida ainda.</p>
+      {loading ? <EliteLoader /> : routes.length === 0 ? (
+        <div className="card-aura p-24 rounded-[40px] text-center space-y-8 border border-white/5 opacity-50 relative z-10">
+           <MapPin size={64} strokeWidth={1} className="mx-auto text-sky-500" />
+           <div className="space-y-2">
+              <h4 className="font-black uppercase tracking-widest italic text-xl">Terra Incognita</h4>
+              <p className="text-[10px] font-medium opacity-50 uppercase tracking-[0.3em]">Nenhuma coordenada definida até ao momento.</p>
+           </div>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {routes.map((route, idx) => (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
+            {routes.map((route) => (
                 <motion.div 
                     key={route.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="glass p-10 rounded-[45px] space-y-8 group hover:border-orange-500/30 transition-all border border-white/5 relative overflow-hidden"
+                    layoutId={route.id}
+                    className="card-aura p-10 space-y-8 group hover:border-sky-500/30 transition-all relative overflow-hidden"
                 >
                     <div className="flex justify-between items-start">
-                       <div className="bg-orange-500/10 p-4 rounded-2xl text-orange-500 group-hover:bg-orange-500 group-hover:text-white transition-all">
-                          <Navigation2 size={24} />
-                       </div>
-                       <button 
-                        onClick={() => handleDelete(route.id)}
-                        className="opacity-0 group-hover:opacity-100 p-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
-                       >
-                          <Trash2 size={20} />
-                       </button>
+                        <div className="bg-white/5 p-5 rounded-3xl text-sky-500 group-hover:bg-sky-500 group-hover:text-white transition-all group-hover:scale-110">
+                            <Navigation2 size={24} />
+                        </div>
+                        <button 
+                          onClick={() => handleDelete(route.id)}
+                          className="text-white/10 hover:text-rose-500 transition-colors p-2"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                     </div>
 
                     <div className="space-y-6 relative z-10">
-                        <div className="flex items-center gap-4">
-                            <div className="w-3 h-3 rounded-full bg-white/20 border border-white/10 group-hover:bg-white transition-colors"></div>
-                            <span className="font-black text-xl italic uppercase tracking-tighter truncate">{route.origin}</span>
+                        <div className="flex items-center gap-5">
+                            <div className="w-4 h-4 rounded-full border-2 border-sky-500/30 flex items-center justify-center">
+                              <div className="w-1.5 h-1.5 rounded-full bg-sky-500/50"></div>
+                            </div>
+                            <span className="font-black text-2xl italic tracking-tighter uppercase">{route.origin}</span>
                         </div>
-                        <div className="w-0.5 h-8 bg-gradient-to-b from-white/10 to-orange-500/30 ml-[5px]"></div>
-                        <div className="flex items-center gap-4">
-                            <div className="w-3 h-3 rounded-full bg-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.5)]"></div>
-                            <span className="font-black text-xl italic uppercase tracking-tighter truncate text-orange-500">{route.destination}</span>
-                        </div>
-                    </div>
-
-                    <div className="pt-8 border-t border-white/5 flex justify-between items-center relative z-10">
-                        <div>
-                           <p className="text-[9px] font-black uppercase opacity-30 tracking-[0.2em] mb-1">Distância</p>
-                           <p className="font-black text-sm">{route.distance}</p>
-                        </div>
-                        <div className="text-right">
-                           <p className="text-[9px] font-black uppercase opacity-30 tracking-[0.2em] mb-1">Duração</p>
-                           <p className="font-black text-sm">{route.duration}</p>
+                        <div className="ml-2 w-0.5 h-10 border-l border-dashed border-white/10 group-hover:border-sky-500/20"></div>
+                        <div className="flex items-center gap-5">
+                            <div className="w-4 h-4 rounded-full bg-sky-500 shadow-[0_0_15px_rgba(14,165,233,0.5)]"></div>
+                            <span className="font-black text-2xl italic tracking-tighter uppercase text-sky-400 glow-text">{route.destination}</span>
                         </div>
                     </div>
 
-                    {/* Fundo Decorativo */}
-                    <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover:scale-110 transition-transform">
-                        <MapPin size={150} />
+                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                        <div className="space-y-1">
+                            <p className="text-[8px] font-black uppercase opacity-20 tracking-widest">Distância</p>
+                            <div className="flex items-center gap-2">
+                                <span className="font-black text-lg italic">{route.distance}</span>
+                            </div>
+                        </div>
+                        <div className="space-y-1 text-right">
+                            <p className="text-[8px] font-black uppercase opacity-20 tracking-widest">Duração</p>
+                            <div className="flex items-center gap-2 justify-end">
+                                <span className="font-black text-lg italic">{route.duration}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="absolute -top-10 -right-10 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity transform -rotate-12">
+                         <Globe size={220} />
                     </div>
                 </motion.div>
             ))}
         </div>
       )}
 
-      {/* Modal de Criação */}
+      {/* Modal Elite */}
       <AnimatePresence>
         {showCreateModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-8 bg-black/90 backdrop-blur-md">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-8">
             <motion.div 
-               initial={{ opacity: 0, scale: 0.9, y: 20 }}
+               initial={{ opacity: 0 }} 
+               animate={{ opacity: 1 }} 
+               exit={{ opacity: 0 }}
+               onClick={() => setShowCreateModal(false)}
+               className="absolute inset-0 bg-black/90 backdrop-blur-xl"
+            />
+            <motion.div 
+               initial={{ opacity: 0, scale: 0.95, y: 10 }}
                animate={{ opacity: 1, scale: 1, y: 0 }}
-               className="bg-zinc-900 border border-white/10 w-full max-w-xl rounded-[50px] p-12 space-y-10 shadow-[0_50px_100px_rgba(0,0,0,0.5)]"
+               exit={{ opacity: 0, scale: 0.95, y: 10 }}
+               className="bg-[#0D0D10] border border-white/10 w-full max-w-xl rounded-[40px] p-12 space-y-10 shadow-[0_50px_100px_rgba(0,0,0,0.8)] relative z-10"
             >
                 <div className="flex justify-between items-center">
-                    <h3 className="text-3xl font-black uppercase tracking-tighter italic">DEFINIR <span className="text-orange-500">NOVA ROTA</span></h3>
-                    <button onClick={() => setShowCreateModal(false)} className="text-white/30 hover:text-white transition-colors">
-                        <X size={32} />
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-sky-500 uppercase tracking-[0.4em]">Protocolo de Rota</p>
+                      <h3 className="text-3xl font-black uppercase tracking-tighter italic">Novo <span className="text-sky-500">Trajecto</span></h3>
+                    </div>
+                    <button onClick={() => setShowCreateModal(false)} className="bg-white/5 p-3 rounded-2xl text-white/30 hover:text-white transition-colors">
+                        <X size={24} />
                     </button>
                 </div>
 
                 <form onSubmit={handleCreate} className="space-y-8">
                     <div className="grid md:grid-cols-2 gap-8">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">Cidade Origem</label>
+                            <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2 block">Cidade de Origem</label>
                             <input 
                                 required
                                 type="text"
-                                placeholder="Ex: Maputo"
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 outline-none focus:border-orange-500/50 font-black"
+                                placeholder="MAPUTO"
+                                className="w-full bg-white/[0.03] border border-white/5 hover:border-white/10 rounded-2xl p-5 outline-none focus:border-sky-500/50 font-black uppercase transition-all"
                                 value={formData.origin}
                                 onChange={e => setFormData({...formData, origin: e.target.value})}
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">Cidade Destino</label>
+                            <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2 block">Cidade de Destino</label>
                             <input 
                                 required
                                 type="text"
-                                placeholder="Ex: Beira"
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 outline-none focus:border-orange-500/50 font-black text-orange-500"
+                                placeholder="BEIRA"
+                                className="w-full bg-white/[0.03] border border-white/5 hover:border-white/10 rounded-2xl p-5 outline-none focus:border-sky-500/50 font-black uppercase text-sky-400 transition-all"
                                 value={formData.destination}
                                 onChange={e => setFormData({...formData, destination: e.target.value})}
                             />
@@ -187,23 +215,23 @@ export default function RoutesPage() {
 
                     <div className="grid md:grid-cols-2 gap-8">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">Distância (KM)</label>
+                            <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2 block">Extensão (KM)</label>
                             <input 
                                 required
                                 type="text"
-                                placeholder="Ex: 1100km"
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 outline-none focus:border-orange-500/50 font-black"
+                                placeholder="1100 KM"
+                                className="w-full bg-white/[0.03] border border-white/5 hover:border-white/10 rounded-2xl p-5 outline-none focus:border-sky-500/50 font-black transition-all"
                                 value={formData.distance}
                                 onChange={e => setFormData({...formData, distance: e.target.value})}
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">Duração (Horas)</label>
+                            <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2 block">Tempo Estimado</label>
                             <input 
                                 required
                                 type="text"
-                                placeholder="Ex: 18h"
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 outline-none focus:border-orange-500/50 font-black"
+                                placeholder="18 HORAS"
+                                className="w-full bg-white/[0.03] border border-white/5 hover:border-white/10 rounded-2xl p-5 outline-none focus:border-sky-500/50 font-black transition-all"
                                 value={formData.duration}
                                 onChange={e => setFormData({...formData, duration: e.target.value})}
                             />
@@ -212,9 +240,9 @@ export default function RoutesPage() {
 
                     <button 
                         type="submit"
-                        className="w-full bg-orange-500 text-white py-6 rounded-2xl font-black text-xs uppercase tracking-[0.4em] hover:bg-orange-400 transition-all shadow-xl shadow-orange-500/20 active:scale-95"
+                        className="w-full h-16 bg-sky-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] hover:bg-sky-400 transition-all shadow-[0_15px_40px_rgba(14,165,233,0.3)] active:scale-[0.98] flex items-center justify-center gap-3"
                     >
-                        Publicar Rota
+                        Validar Rota <Zap size={14} fill="currentColor" />
                     </button>
                 </form>
             </motion.div>
