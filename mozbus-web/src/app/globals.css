@@ -8,7 +8,7 @@
   --color-aura-surface: var(--aura-surface);
   --color-aura-border: var(--aura-border);
   --color-aura-text: var(--aura-text);
-  --color-aura-muted: var(--aura-text-muted);
+  --color-aura-muted: var(--aura-muted);
 }
 
 :root {
@@ -16,7 +16,7 @@
   --aura-bg: #0B0B0F;
   --aura-surface: #16161E;
   --aura-text: #FFFFFF;
-  --aura-text-muted: rgba(255, 255, 255, 0.6);
+  --aura-muted: rgba(255, 255, 255, 0.6);
   --aura-border: rgba(255, 255, 255, 0.08);
   --aura-accent: #0EA5E9;
   --aura-glass: rgba(22, 22, 30, 0.75);
@@ -31,7 +31,7 @@
   --aura-bg: #F8FAFC;
   --aura-surface: #FFFFFF;
   --aura-text: #0F172A;
-  --aura-text-muted: #64748B;
+  --aura-muted: #64748B;
   --aura-border: rgba(15, 23, 42, 0.06);
   --aura-accent: #0284C7; /* Slightly deeper sky blue for light contrast */
   --aura-glass: rgba(255, 255, 255, 0.45);

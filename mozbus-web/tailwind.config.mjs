@@ -10,6 +10,14 @@ export default {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        aura: {
+          bg: "var(--aura-bg)",
+          surface: "var(--aura-surface)",
+          border: "var(--aura-border)",
+          text: "var(--aura-text)",
+          muted: "var(--aura-muted)",
+          accent: "var(--aura-accent)",
+        },
         primary: {
           DEFAULT: "#f97316",
           foreground: "#ffffff",
