@@ -7,6 +7,7 @@ import api from '@/lib/api';
 import Navbar from '@/components/Navbar';
 import EliteLoader from '@/components/EliteLoader';
 import EliteSkeleton from '@/components/EliteSkeleton';
+import { useToast } from '@/components/EliteToast';
 import { useRouter } from 'next/navigation';
 import { QRCodeCanvas } from 'qrcode.react';
 
@@ -48,6 +49,7 @@ export default function MeusBilhetesPage() {
   const [isOffline, setIsOffline] = useState(false);
   const [expandedTicketId, setExpandedTicketId] = useState<string | null>(null);
   const router = useRouter();
+  const { toast } = useToast();
 
   const sortedTickets = React.useMemo(() => {
     return [...tickets].sort((a, b) => 
@@ -106,10 +108,10 @@ export default function MeusBilhetesPage() {
     setActionLoading(ticketId);
     try {
       await api.post(`/tickets/${ticketId}/pay`);
-      alert('Pagamento simulado com sucesso!');
+      toast('Pagamento simulado com sucesso!', 'success');
       if (user) fetchTickets(user.id);
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Erro ao processar pagamento.');
+      toast(e.response?.data?.message || 'Erro ao processar pagamento.', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -120,10 +122,10 @@ export default function MeusBilhetesPage() {
     setActionLoading(ticketId);
     try {
       await api.post(`/tickets/${ticketId}/cancel`);
-      alert('Reserva cancelada com sucesso!');
+      toast('Reserva cancelada com sucesso!', 'success');
       if (user) fetchTickets(user.id);
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Erro ao cancelar reserva.');
+      toast(e.response?.data?.message || 'Erro ao cancelar reserva.', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -136,10 +138,10 @@ export default function MeusBilhetesPage() {
     setActionLoading(ticketId);
     try {
       await api.post(`/tickets/${ticketId}/edit-seat`, { newSeatNumber: parseInt(newSeat) });
-      alert('Assento atualizado com sucesso!');
+      toast('Assento atualizado com sucesso!', 'success');
       if (user) fetchTickets(user.id);
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Erro ao atualizar assento.');
+      toast(e.response?.data?.message || 'Erro ao atualizar assento.', 'error');
     } finally {
       setActionLoading(null);
     }

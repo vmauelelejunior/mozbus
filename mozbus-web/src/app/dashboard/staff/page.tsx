@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Plus, Shield, X, Loader2, UserCheck, Trash2, Mail, Phone, Zap, Briefcase } from 'lucide-react';
 import api from '@/lib/api';
 import EliteLoader from '@/components/EliteLoader';
+import EliteSkeleton from '@/components/EliteSkeleton';
+import { useToast } from '@/components/EliteToast';
 
 interface UserData {
   id: string;
@@ -26,6 +28,7 @@ export default function StaffPage() {
     password: 'password123',
     role: 'FISCAL'
   });
+  const { toast } = useToast();
 
   const fetchStaff = async () => {
     setLoading(true);
@@ -62,7 +65,7 @@ export default function StaffPage() {
       });
       fetchStaff();
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Erro ao registar colaborador');
+      toast(e.response?.data?.message || 'Erro ao registar colaborador', 'error');
     }
   };
 
@@ -98,7 +101,26 @@ export default function StaffPage() {
         </div>
       </div>
 
-      {loading ? <EliteLoader /> : staff.length === 0 ? (
+      {loading ? (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="card-aura p-10 space-y-8 relative overflow-hidden">
+               <div className="flex justify-between items-start">
+                  <EliteSkeleton className="w-16 h-16 rounded-3xl" />
+                  <EliteSkeleton className="w-24 h-6 rounded-xl" />
+               </div>
+               <div className="space-y-3">
+                  <EliteSkeleton className="w-20 h-3 rounded-full" />
+                  <EliteSkeleton className="w-3/4 h-8 rounded-lg" />
+               </div>
+               <div className="space-y-4 pt-4 border-t border-white/5">
+                  <EliteSkeleton className="w-full h-4 rounded-full" />
+                  <EliteSkeleton className="w-2/3 h-4 rounded-full" />
+               </div>
+            </div>
+          ))}
+        </div>
+      ) : staff.length === 0 ? (
         <div className="card-aura p-24 rounded-[40px] text-center space-y-8 border border-white/5 opacity-50 relative z-10">
            <Users size={64} strokeWidth={1} className="mx-auto text-sky-500" />
            <div className="space-y-2">

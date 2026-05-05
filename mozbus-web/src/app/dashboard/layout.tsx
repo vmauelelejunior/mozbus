@@ -5,12 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, Bus, Map, Calendar, Users, 
   Settings, LogOut, Bell, Search, Hexagon, 
-  ShieldCheck, Zap, Compass, Activity, Menu, X, CreditCard
+  ShieldCheck, Zap, Compass, Activity, Menu, X, CreditCard, MessageCircle
 } from 'lucide-react';
 import NotificationPrompt from '@/components/NotificationPrompt';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import EliteLoader from '@/components/EliteLoader';
+import { useToast } from '@/components/EliteToast';
+import api from '@/lib/api';
 
 interface User {
   id: string;
@@ -34,6 +36,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isMounted, setIsMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     setIsMounted(true);
@@ -50,6 +56,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           
           if (parsedUser.role === 'PASSENGER') {
             router.push('/tickets/meus-bilhetes');
+          } else {
+            // Iniciar Polling de Mensagens
+            fetchUnread(parsedUser);
+            const interval = setInterval(() => fetchUnread(parsedUser), 10000);
+            return () => clearInterval(interval);
           }
         } catch {
           router.push('/auth/login');
@@ -59,6 +70,39 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
     }
   }, [isMounted, router]);
+
+  const fetchUnread = async (currentUser: any) => {
+    try {
+      const resCount = await api.get('/communication/unread');
+      const resDetails = await api.get('/communication/unread-details');
+      
+      if (resCount.data > unreadCount) {
+        const lastMsg = resDetails.data[0];
+        toast(`Mensagem de ${lastMsg?.sender?.name}: "${lastMsg?.content?.substring(0, 30)}..."`, 'info');
+      }
+      
+      setUnreadCount(resCount.data);
+      setNotifications(resDetails.data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleNotificationClick = async (notification: any) => {
+    try {
+      await api.patch(`/communication/read/${notification.id}`);
+      setIsNotificationsOpen(false);
+      fetchUnread(user);
+      
+      if (user?.role === 'SUPER_ADMIN') {
+        router.push('/dashboard/companies');
+      } else {
+        router.push('/dashboard/messages');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -79,6 +123,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { icon: Calendar, label: 'Logística', href: '/dashboard/trips', roles: ['COMPANY_ADMIN'] },
     { icon: Users, label: 'Staff Hub', href: '/dashboard/staff', roles: ['COMPANY_ADMIN'] },
     { icon: Activity, label: 'Operação de Campo', href: '/fiscal', roles: ['FISCAL'] },
+    { icon: MessageCircle, label: 'Mensagens', href: '/dashboard/messages', roles: ['COMPANY_ADMIN'] },
     { icon: Settings, label: 'Configurações', href: '/settings', roles: ['SUPER_ADMIN', 'COMPANY_ADMIN', 'FISCAL'] },
   ];
 
@@ -204,10 +249,66 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30">GRID ESTÁVEL</span>
                </div>
                
-               <button className="relative bg-white/5 p-3 rounded-xl hover:bg-white/10 transition-all border border-white/5 group">
-                  <Bell size={18} className="text-white/30 group-hover:text-white" />
-                  <span className="absolute top-3 right-3 w-2 h-2 bg-sky-500 rounded-full shadow-[0_0_10px_#0EA5E9] border-2 border-background"></span>
-               </button>
+               <div className="relative">
+                 <button 
+                    onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                    className="relative bg-white/5 p-3 rounded-xl hover:bg-white/10 transition-all border border-white/5 group"
+                 >
+                    <Bell size={18} className="text-white/30 group-hover:text-white" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-2.5 right-2.5 w-4 h-4 bg-sky-500 rounded-full shadow-[0_0_15px_#0EA5E9] border-2 border-background flex items-center justify-center text-[7px] font-black text-white">
+                        {unreadCount}
+                      </span>
+                    )}
+                 </button>
+
+                 <AnimatePresence>
+                   {isNotificationsOpen && (
+                     <motion.div 
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 mt-4 w-80 glass-aura border border-white/10 rounded-3xl overflow-hidden z-[100] shadow-[0_30px_100px_rgba(0,0,0,0.8)]"
+                     >
+                        <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+                           <h5 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Central de Alertas</h5>
+                           {unreadCount > 0 && <span className="text-[8px] font-black bg-sky-500 text-black px-2 py-0.5 rounded-full">{unreadCount} NOVOS</span>}
+                        </div>
+                        <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                           {notifications.length === 0 ? (
+                             <div className="p-12 text-center space-y-4 opacity-20">
+                                <Bell size={32} className="mx-auto" strokeWidth={1} />
+                                <p className="text-[10px] font-black uppercase tracking-widest">Nenhum alerta pendente</p>
+                             </div>
+                           ) : notifications.map((n, i) => (
+                             <div 
+                                key={i}
+                                onClick={() => handleNotificationClick(n)}
+                                className="p-6 border-b border-white/5 hover:bg-white/[0.05] cursor-pointer transition-all group"
+                             >
+                                <div className="flex justify-between items-start mb-2">
+                                   <p className="text-[9px] font-black text-sky-500 uppercase tracking-widest">{n.sender?.name}</p>
+                                   <span className="text-[7px] font-bold text-white/20">{new Date(n.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                </div>
+                                <p className="text-[11px] text-white/60 line-clamp-2 group-hover:text-white transition-colors leading-relaxed">
+                                   {n.content}
+                                </p>
+                                {n.company && <p className="text-[7px] font-black text-white/10 uppercase mt-2 tracking-widest">{n.company.name}</p>}
+                             </div>
+                           ))}
+                        </div>
+                        {notifications.length > 0 && (
+                          <button 
+                            onClick={() => router.push(user?.role === 'SUPER_ADMIN' ? '/dashboard/companies' : '/dashboard/messages')}
+                            className="w-full py-4 text-[9px] font-black uppercase tracking-[0.4em] text-white/20 hover:text-white hover:bg-white/5 transition-all"
+                          >
+                            Ver Todo o Histórico
+                          </button>
+                        )}
+                     </motion.div>
+                   )}
+                 </AnimatePresence>
+               </div>
 
                <div className="flex items-center gap-4 group cursor-pointer xl:pl-8 xl:border-l xl:border-white/10">
                   <div className="text-right hidden md:block">

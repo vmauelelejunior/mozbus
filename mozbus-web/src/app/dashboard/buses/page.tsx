@@ -6,6 +6,7 @@ import { Bus, Plus, Search, ShieldCheck, X, Loader2, Gauge, Trash2, Zap, LayoutG
 import api from '@/lib/api';
 import BusLayoutConfigurator from '@/components/BusLayoutConfigurator';
 import EliteLoader from '@/components/EliteLoader';
+import { useToast } from '@/components/EliteToast';
 
 interface BusData {
   id: string;
@@ -26,6 +27,7 @@ export default function FleetPage() {
     companyId: ''
   });
   const [configuringBus, setConfiguringBus] = useState<BusData | null>(null);
+  const { toast } = useToast();
 
   const fetchBuses = async () => {
     setLoading(true);
@@ -51,17 +53,18 @@ export default function FleetPage() {
       setFormData({ ...formData, plate: '', model: '' });
       fetchBuses();
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Erro ao adicionar viatura');
+      toast(e.response?.data?.message || 'Erro ao adicionar viatura', 'error');
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Eliminar esta unidade da frota operativa?')) return;
     try {
-      await api.delete(`/buses/${id}`);
+      await api.patch(`/buses/${id}`, { status: 'INACTIVE' });
+      toast('Unidade desativada com sucesso', 'success');
       fetchBuses();
     } catch (e) {
-      alert('Falha na desativação da unidade.');
+      toast('Falha na desativação da unidade.', 'error');
     }
   };
 

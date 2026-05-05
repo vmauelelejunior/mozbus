@@ -109,7 +109,7 @@ export default function ChatSupport() {
             exit={{ scale: 0, opacity: 0 }}
             onClick={() => setIsOpen(true)}
             style={{ background: '#0ea5e9' }}
-            className="fixed bottom-6 right-6 z-50 p-4 rounded-full text-white shadow-[0_8px_32px_rgba(14,165,233,0.4)] hover:shadow-[0_8px_40px_rgba(14,165,233,0.6)] transition-all"
+            className="fixed bottom-6 left-6 z-50 p-4 rounded-full text-white shadow-[0_8px_32px_rgba(14,165,233,0.4)] hover:shadow-[0_8px_40px_rgba(14,165,233,0.6)] transition-all"
           >
             <MessageSquare size={24} />
           </motion.button>
@@ -130,7 +130,7 @@ export default function ChatSupport() {
               backdropFilter: 'blur(32px)',
               WebkitBackdropFilter: 'blur(32px)',
             }}
-            className="fixed bottom-6 right-6 z-50 w-[320px] sm:w-[360px] h-[500px] max-h-[80vh] rounded-xl shadow-2xl flex flex-col overflow-hidden"
+            className="fixed bottom-6 left-6 z-50 w-[320px] sm:w-[360px] h-[500px] max-h-[80vh] rounded-xl shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div

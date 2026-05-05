@@ -84,6 +84,12 @@ async function main() {
     });
     companyInstances.push(c);
 
+    // VINCULAR ADMIN À EMPRESA (Crucial para RLS e Token)
+    await prisma.user.update({
+      where: { id: adminIds[i] },
+      data: { companyId: c.id }
+    });
+
     // Frotas (3 buses per company)
     for (let j = 0; j < 3; j++) {
       await prisma.bus.create({

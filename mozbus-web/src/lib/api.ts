@@ -15,4 +15,18 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Interceptor para lidar com erros globais (como 401 Unauthorized)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+        window.location.href = '/auth/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

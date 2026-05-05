@@ -14,39 +14,39 @@ description: Plano de desenvolvimento MozBus - continuação do projecto do pont
 
 ## FASE 1 — CORRECÇÕES CRÍTICAS (Blocking Issues)
 
-### Fase 1.1 — Corrigir Porta do Backend
-- Editar `mozbus-backend/.env` e garantir `PORT=3333`
-- Verificar que `mozbus-web/src/lib/api.ts` aponta para `http://localhost:3333`
+### Fase 1.1 — Corrigir Porta do Backend (Concluído)
+- [x] Editar `mozbus-backend/.env` e garantir `PORT=4100` (Atualizado de 3333 para 4100)
+- [x] Verificar que `mozbus-web/src/lib/api.ts` aponta para `http://localhost:4100`
 
-### Fase 1.2 — Implementar JWT Guards no Backend
-- Criar `JwtAuthGuard` em `src/auth/jwt.guard.ts`
-- Criar `JwtStrategy` em `src/auth/jwt.strategy.ts`
-- Proteger endpoints: `/trips` (POST), `/tickets/book`, `/tickets/scan`
-- Endpoints públicos: `/auth/login`, `/auth/register`, `/trips/search`, `/trips/:id` (GET)
+### Fase 1.2 — Implementar JWT Guards no Backend (Concluído)
+- [x] Criar `JwtAuthGuard` em `src/auth/jwt.guard.ts`
+- [x] Criar `JwtStrategy` em `src/auth/jwt.strategy.ts`
+- [x] Proteger endpoints: `/trips` (POST), `/tickets/book`, `/tickets/scan`
+- [x] Endpoints públicos: `/auth/login`, `/auth/register`, `/trips/search`, `/trips/:id` (GET)
 
-### Fase 1.3 — Dashboard com Auth Real
-- Ler `mozbus_user` do `localStorage` no `dashboard/layout.tsx`
-- Implementar botão "Sair" (limpar localStorage + redirect `/`)
-- Mostrar nome e role real do utilizador autenticado
+### Fase 1.3 — Dashboard com Auth Real (Concluído)
+- [x] Ler `mozbus_user` do `localStorage` no `dashboard/layout.tsx`
+- [x] Implementar botão "Sair" (limpar localStorage + redirect `/`)
+- [x] Mostrar nome e role real do utilizador autenticado
 
 ## FASE 2 — FUNCIONALIDADES EM FALTA
 
-### Fase 2.1 — Página `/dashboard/staff` (Gestão de Fiscais)
-- Listar todos os utilizadores com role `FISCAL`
-- Atribuir fiscal a um autocarro
-- Criar novo fiscal (form com nome, email, telefone)
-- Design consistente com o resto do dashboard
+### Fase 2.1 — Página `/dashboard/staff` (Gestão de Fiscais) (Concluído)
+- [x] Listar todos os utilizadores com role `FISCAL`
+- [x] Atribuir fiscal a um autocarro
+- [x] Criar novo fiscal (form com nome, email, telefone)
+- [x] Design consistente com o resto do dashboard
 
-### Fase 2.2 — Área do Passageiro "Meus Bilhetes"
-- Nova página `/tickets/meus-bilhetes`
-- Listar bilhetes do utilizador autenticado (via JWT)
-- Mostrar QR code de cada bilhete
-- Status visual: PAGO, EMBARCADO, CANCELADO
-- Adicionar link no navbar para utilizadores PASSENGER
+### Fase 2.2 — Área do Passageiro "Meus Bilhetes" (Concluído)
+- [x] Nova página `/tickets/meus-bilhetes`
+- [x] Listar bilhetes do utilizador autenticado (via JWT)
+- [x] Mostrar QR code de cada bilhete
+- [x] Status visual: PAGO, EMBARCADO, CANCELADO
+- [x] Adicionar link no navbar para utilizadores PASSENGER
 
-### Fase 2.3 — Real-time no Fiscal (Polling)
-- Adicionar polling de 5s em `fiscal/page.tsx` para re-fetch da lista de passageiros
-- Indicador visual de "Ao Vivo" (ponto pulsante verde)
+### Fase 2.3 — Real-time no Fiscal (Polling) (Concluído)
+- [x] Adicionar polling de 5s em `fiscal/page.tsx` para re-fetch da lista de passageiros
+- [x] Indicador visual de "Ao Vivo" (ponto pulsante verde)
 
 ## FASE 3 — POLISH E MELHORIAS
 
@@ -58,10 +58,11 @@ description: Plano de desenvolvimento MozBus - continuação do projecto do pont
 - [x] Fase 3.2: Limpeza de pastas residuais (Concluído)
 - [x] Fase 3.3: Migração para SQLite local e Seed de dados (Concluído)
 - [x] Fase 3.4: Testes de integração de definições (Concluído)
+- [x] Fase 3.5: Módulo de Comunicação CEO <> Operadoras (Concluído)
 
 ## Fase 4: Notificações e UX 10/10
 - [ ] Fase 4.1: Sistema de notificações em tempo real (Toast/Snackbars)
-- [ ] Fase 4.2: Loading states premium (Skeletons Aura Negra)
+- [x] Fase 4.2: Loading states premium (Skeletons Aura Negra) (Concluído)
 - [ ] Fase 4.3: Feedback táctil e micro-animações em toda a app
 
 ## SKILLS A CRIAR

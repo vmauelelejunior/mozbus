@@ -12,6 +12,7 @@ import { FinanceModule } from './finance/finance.module';
 import { PrismaModule } from './prisma.module';
 import { SystemController } from './system.controller';
 import { JwtAuthGuard } from './auth/jwt.guard';
+import { CommunicationModule } from './communication/communication.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { JwtAuthGuard } from './auth/jwt.guard';
     TicketsModule,
     WhatsAppModule,
     FinanceModule,
+    CommunicationModule,
   ],
   controllers: [SystemController],
   providers: [

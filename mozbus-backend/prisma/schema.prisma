@@ -26,6 +26,7 @@ model User {
   assignedBuses    Bus[]     @relation("FiscalBuses")
   companiesManaged Company[] @relation("CompanyAdmin")
   tickets          Ticket[]
+  messages         Message[]
   company          Company?  @relation("CompanyEmployees", fields: [companyId], references: [id])
 }
 
@@ -42,9 +43,22 @@ model Company {
   plan       AuraPlan      @default(BASIC)
   buses      Bus[]
   hardware   Hardware[]
+  messages   Message[]
   admin      User          @relation("CompanyAdmin", fields: [adminId], references: [id])
   routes     Route[]
   employees  User[]        @relation("CompanyEmployees")
+}
+
+model Message {
+  id          String   @id @default(uuid())
+  content     String
+  senderId    String
+  companyId   String   // O "canal" da mensagem é a empresa
+  isReadByAdmin Boolean @default(false)
+  isReadByCeo   Boolean @default(false)
+  createdAt   DateTime @default(now())
+  sender      User     @relation(fields: [senderId], references: [id])
+  company     Company  @relation(fields: [companyId], references: [id])
 }
 
 model Bus {

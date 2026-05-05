@@ -73,7 +73,7 @@ export class CompaniesService {
   }
 
   async findAll(user: any) {
-    return this.prisma.runAsUser(user, async (tx) => {
+    const fetchLogic = async (tx: any) => {
       const companies = await tx.company.findMany({
         include: { 
           buses: { select: { id: true } },
@@ -125,18 +125,30 @@ export class CompaniesService {
       }));
 
       return enhancedCompanies;
-    });
+    };
+
+    if (user.role === 'SUPER_ADMIN') {
+      return fetchLogic(this.prisma);
+    }
+
+    return this.prisma.runAsUser(user, fetchLogic);
   }
 
   async findOne(id: string, user: any) {
-    return this.prisma.runAsUser(user, async (tx) => {
+    const fetchLogic = async (tx: any) => {
       const company = await tx.company.findUnique({
         where: { id },
         include: { buses: true, routes: true }
       });
       if (!company) throw new NotFoundException('Empresa não encontrada ou acesso negado.');
       return company;
-    });
+    };
+
+    if (user.role === 'SUPER_ADMIN') {
+      return fetchLogic(this.prisma);
+    }
+
+    return this.prisma.runAsUser(user, fetchLogic);
   }
 
   async updateStatus(id: string, status: any) {

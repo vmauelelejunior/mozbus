@@ -2,9 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Plus, Navigation2, X, Loader2, Trash2, ArrowRight, Zap, Globe, Hexagon, ShieldCheck, Search, ArrowUpRight, Power, Ban } from 'lucide-react';
+import { 
+  MapPin, Plus, Navigation2, X, Loader2, Trash2, ArrowRight, Zap, Globe, 
+  Hexagon, ShieldCheck, Search, ArrowUpRight, Power, Ban,
+  Crown, Bus, MessageCircle, Send, CheckCircle2, AlertTriangle, FileText
+} from 'lucide-react';
 import api from '@/lib/api';
 import EliteLoader from '@/components/EliteLoader';
+import EliteSkeleton from '@/components/EliteSkeleton';
+import { useToast } from '@/components/EliteToast';
 
 interface Company {
   id: string;
@@ -40,6 +46,8 @@ export default function CompaniesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [messageText, setMessageText] = useState('');
+  const [messages, setMessages] = useState<any[]>([]);
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: '',
     nuit: '',
@@ -66,21 +74,40 @@ export default function CompaniesPage() {
     fetchCompanies();
   }, []);
 
+  useEffect(() => {
+    if (selectedCompany) {
+      fetchMessages(selectedCompany.id);
+      const interval = setInterval(() => fetchMessages(selectedCompany.id), 5000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedCompany]);
+
+  const fetchMessages = async (companyId: string) => {
+    try {
+      const res = await api.get(`/communication/messages/${companyId}`);
+      setMessages(res.data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     try {
       await api.patch(`/companies/${id}/status`, { status: newStatus });
+      toast(`Operadora ${newStatus === 'ACTIVE' ? 'Activada' : 'Suspendida'} com sucesso`, 'success');
       fetchCompanies();
     } catch (e) {
-      alert('Falha crítica na alteração de estatuto.');
+      toast('Falha crítica na alteração de estatuto.', 'error');
     }
   };
 
   const handleUpdatePlan = async (id: string, newPlan: string) => {
     try {
       await api.patch(`/companies/${id}/plan`, { plan: newPlan });
+      toast(`Plano actualizado para ${newPlan}`, 'success');
       fetchCompanies();
     } catch (e) {
-      alert('Erro ao atualizar plano da operadora.');
+      toast('Erro ao atualizar plano da operadora.', 'error');
     }
   };
 
@@ -97,8 +124,9 @@ export default function CompaniesPage() {
       setShowCreateModal(false);
       setFormData({ name: '', nuit: '', email: '', username: '', password: Math.random().toString(36).slice(-8), phone: '' });
       fetchCompanies();
+      toast('Operadora registada com sucesso', 'success');
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Erro ao registar operadora');
+      toast(e.response?.data?.message || 'Erro ao registar operadora', 'error');
     }
   };
 
@@ -106,15 +134,15 @@ export default function CompaniesPage() {
     if (!messageText || !selectedCompany) return;
     setIsSendingMessage(true);
     try {
-      // Assuming we have an endpoint for this or using WhatsApp
-      await api.post('/whatsapp/send', { 
-        to: selectedCompany.email, // Or phone if available
-        message: messageText 
+      await api.post(`/communication/send`, { 
+        companyId: selectedCompany.id,
+        content: messageText 
       });
-      alert('Mensagem enviada com sucesso para o canal da operadora.');
+      toast('Mensagem enviada!', 'success');
       setMessageText('');
+      fetchMessages(selectedCompany.id);
     } catch (e) {
-      alert('Falha ao enviar mensagem estratégica.');
+      toast('Falha ao enviar mensagem.', 'error');
     } finally {
       setIsSendingMessage(false);
     }
@@ -162,7 +190,29 @@ export default function CompaniesPage() {
         </div>
       </div>
 
-      {loading ? <EliteLoader /> : (
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8 relative z-10">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="card-aura p-8 space-y-6 border border-white/5 relative overflow-hidden">
+              <div className="flex justify-between items-start">
+                <EliteSkeleton className="w-14 h-14 rounded-2xl" />
+                <div className="flex flex-col items-end gap-2">
+                   <EliteSkeleton className="w-24 h-6 rounded-full" />
+                   <EliteSkeleton className="w-32 h-4 rounded-full" />
+                </div>
+              </div>
+              <div className="space-y-3">
+                <EliteSkeleton className="w-3/4 h-8 rounded-lg" />
+                <EliteSkeleton className="w-1/2 h-4 rounded-lg" />
+              </div>
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                <EliteSkeleton className="w-full h-12 rounded-xl" />
+                <EliteSkeleton className="w-full h-12 rounded-xl" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8 relative z-10">
             {companies.map((company) => (
                 <motion.div 
@@ -306,107 +356,103 @@ export default function CompaniesPage() {
                     </button>
                 </div>
 
-                <div className="p-8 lg:p-12 space-y-12 pb-32">
-                    {/* Metrics Dashboard */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="glass-aura p-6 border border-white/5 rounded-3xl space-y-4">
-                            <p className="text-[8px] font-black text-white/20 uppercase tracking-[0.4em]">Receita Bruta</p>
-                            <h4 className="text-2xl font-black text-emerald-400 italic">MT {selectedCompany.stats?.revenue.toLocaleString()}</h4>
-                            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                                <div className="h-full bg-emerald-500 w-[65%]" />
-                            </div>
-                        </div>
-                        <div className="glass-aura p-6 border border-white/5 rounded-3xl space-y-4">
-                            <p className="text-[8px] font-black text-white/20 uppercase tracking-[0.4em]">Frota Operacional</p>
-                            <h4 className="text-2xl font-black text-sky-500 italic">{selectedCompany.stats?.fleetSize} Autocarros</h4>
-                            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                                <div className="h-full bg-sky-500 w-[80%]" />
-                            </div>
-                        </div>
-                        <div className="glass-aura p-6 border border-white/5 rounded-3xl space-y-4">
-                            <p className="text-[8px] font-black text-white/20 uppercase tracking-[0.4em]">Fluxo Diário</p>
-                            <h4 className="text-2xl font-black text-amber-500 italic">{selectedCompany.stats?.dailyTrips} Viagens</h4>
-                            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                                <div className="h-full bg-amber-500 w-[45%]" />
-                            </div>
-                        </div>
+                <div className="flex-1 overflow-y-auto p-6 lg:p-10 space-y-10 custom-scrollbar">
+                    {/* Lite Header Stats */}
+                    <div className="grid grid-cols-3 gap-4">
+                        {[
+                          { label: 'Receita', value: `MT ${selectedCompany.stats?.revenue.toLocaleString()}`, color: 'text-emerald-400' },
+                          { label: 'Frota', value: `${selectedCompany.stats?.fleetSize} Bus`, color: 'text-sky-500' },
+                          { label: 'Status', value: selectedCompany.status, color: selectedCompany.status === 'ACTIVE' ? 'text-emerald-400' : 'text-rose-500' }
+                        ].map(stat => (
+                          <div key={stat.label} className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                             <p className="text-[7px] font-black uppercase text-white/20 tracking-widest mb-1">{stat.label}</p>
+                             <p className={`text-sm font-black italic ${stat.color}`}>{stat.value}</p>
+                          </div>
+                        ))}
                     </div>
 
-                    {/* Hardware & Infrastructure */}
+                    {/* Chat Thread */}
                     <div className="space-y-6">
-                        <h5 className="text-[10px] font-black text-white/40 uppercase tracking-[0.5em] flex items-center gap-4">
-                           Infraestrutura de Hardware
+                        <h5 className="text-[9px] font-black text-white/40 uppercase tracking-[0.5em] flex items-center gap-4">
+                           Canal de Comunicação Direta
                            <div className="h-px flex-1 bg-white/5" />
                         </h5>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                           {selectedCompany.hardware?.length > 0 ? selectedCompany.hardware.map(hw => (
-                              <div key={hw.id} className="bg-white/5 border border-white/5 p-4 rounded-2xl text-center group hover:border-sky-500/30 transition-all">
-                                 <Zap size={16} className="mx-auto mb-3 text-sky-500/40 group-hover:text-sky-500" />
-                                 <p className="text-[9px] font-black text-white truncate">{hw.serialNumber}</p>
-                                 <p className="text-[7px] font-bold text-white/20 uppercase mt-1">{hw.type}</p>
-                              </div>
-                           )) : (
-                              <div className="col-span-4 py-8 text-center border border-dashed border-white/10 rounded-3xl opacity-20">
-                                 <p className="text-[10px] font-black uppercase tracking-widest text-white">Nenhum hardware registado</p>
-                              </div>
-                           )}
+                        
+                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                           {messages.length === 0 ? (
+                             <div className="text-center py-10 opacity-20 italic text-[10px] uppercase font-black tracking-widest">Inicie uma conversa estratégica</div>
+                           ) : messages.map((m, i) => {
+                             const isCeo = m.sender.role === 'SUPER_ADMIN';
+                             return (
+                               <div key={i} className={`flex ${isCeo ? 'justify-end' : 'justify-start'}`}>
+                                  <div className="flex flex-col gap-2 max-w-[85%]">
+                                     <div className={`flex items-center gap-2 ${isCeo ? 'flex-row-reverse' : 'flex-row'}`}>
+                                        <div className={`w-5 h-5 rounded-full flex items-center justify-center ${isCeo ? 'bg-amber-500 text-black' : 'bg-sky-500 text-black'}`}>
+                                           {isCeo ? <Crown size={10} /> : <Bus size={10} />}
+                                        </div>
+                                        <p className="opacity-40 text-[7px] font-black uppercase tracking-[0.2em]">{m.sender.name}</p>
+                                     </div>
+                                     <div className={`p-5 rounded-2xl text-[11px] font-medium leading-relaxed ${
+                                       isCeo 
+                                       ? 'bg-amber-500 text-black font-black rounded-tr-none shadow-[0_15px_40px_rgba(245,158,11,0.25)]' 
+                                       : 'bg-sky-500 text-black font-black rounded-tl-none shadow-[0_15px_40px_rgba(14,165,233,0.25)]'
+                                     }`}>
+                                        {m.content}
+                                     </div>
+                                     <p className={`opacity-20 text-[7px] font-black uppercase tracking-widest ${isCeo ? 'text-right' : 'text-left'}`}>
+                                        {new Date(m.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                     </p>
+                                  </div>
+                               </div>
+                             );
+                           })}
+                        </div>
+
+                        <div className="relative">
+                           <textarea 
+                              placeholder="Directiva estratégica..."
+                              className="w-full h-24 bg-black/40 border border-white/5 rounded-2xl p-4 outline-none focus:border-sky-500/50 text-[11px] text-white font-medium resize-none"
+                              value={messageText}
+                              onChange={(e) => setMessageText(e.target.value)}
+                           />
+                           <button 
+                              onClick={handleSendMessage}
+                              disabled={isSendingMessage || !messageText}
+                              className="absolute bottom-4 right-4 bg-sky-500 text-black px-6 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest hover:scale-105 transition-all disabled:opacity-20"
+                           >
+                              {isSendingMessage ? '...' : 'Enviar'}
+                           </button>
                         </div>
                     </div>
 
-                    {/* Governance & Plan */}
-                    <div className="grid md:grid-cols-2 gap-8">
-                        <div className="space-y-6">
-                           <h5 className="text-[10px] font-black text-white/40 uppercase tracking-[0.5em]">Upgrade de Protocolo</h5>
-                           <div className="flex flex-col gap-3">
-                                {['BASIC', 'PREMIUM', 'ELITE'].map((p) => (
+                    {/* Admin Controls (Lite) */}
+                    <div className="pt-10 border-t border-white/5 space-y-6">
+                        <div className="flex justify-between items-center">
+                            <div className="space-y-1">
+                               <p className="text-[9px] font-black text-white/20 uppercase tracking-widest">Gestão de Protocolo</p>
+                               <div className="flex gap-2">
+                                  {['BASIC', 'PREMIUM', 'ELITE'].map(p => (
                                     <button 
-                                        key={p}
-                                        onClick={() => handleUpdatePlan(selectedCompany.id, p)}
-                                        className={`w-full p-5 rounded-2xl border flex justify-between items-center transition-all ${
-                                            selectedCompany.plan === p 
-                                            ? 'bg-sky-500/10 border-sky-500 text-white font-black' 
-                                            : 'bg-white/5 border-white/5 text-white/20 hover:border-white/20'
-                                        }`}
+                                      key={p}
+                                      onClick={() => handleUpdatePlan(selectedCompany.id, p)}
+                                      className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase transition-all ${
+                                        selectedCompany.plan === p ? 'bg-sky-500 text-black' : 'bg-white/5 text-white/40 hover:bg-white/10'
+                                      }`}
                                     >
-                                        <span className="text-[10px] uppercase tracking-widest">{p} PROTOCOL</span>
-                                        {selectedCompany.plan === p && <ShieldCheck size={18} />}
+                                      {p}
                                     </button>
-                                ))}
-                           </div>
+                                  ))}
+                               </div>
+                            </div>
+                            <button 
+                               onClick={() => handleUpdateStatus(selectedCompany.id, selectedCompany.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE')}
+                               className={`px-6 py-3 rounded-xl border font-black text-[9px] uppercase tracking-widest transition-all ${
+                                  selectedCompany.status === 'ACTIVE' ? 'border-rose-500/20 text-rose-500 hover:bg-rose-500' : 'border-emerald-500/20 text-emerald-400 hover:bg-emerald-500'
+                               }`}
+                            >
+                               {selectedCompany.status === 'ACTIVE' ? 'Suspender' : 'Activar'}
+                            </button>
                         </div>
-
-                        <div className="space-y-6">
-                           <h5 className="text-[10px] font-black text-white/40 uppercase tracking-[0.5em]">Canal Estratégico (Direct)</h5>
-                           <div className="glass-aura p-6 rounded-3xl border border-white/5 space-y-4">
-                              <textarea 
-                                 placeholder="Escreva uma directiva para o administrador da operadora..."
-                                 className="w-full h-32 bg-black/40 border border-white/5 rounded-xl p-4 outline-none focus:border-sky-500/50 text-[11px] text-white font-medium resize-none placeholder:text-white/10"
-                                 value={messageText}
-                                 onChange={(e) => setMessageText(e.target.value)}
-                              />
-                              <button 
-                                 onClick={handleSendMessage}
-                                 disabled={isSendingMessage || !messageText}
-                                 className="w-full py-4 bg-sky-500 text-black rounded-xl font-black text-[10px] uppercase tracking-[0.3em] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-20 disabled:scale-100"
-                              >
-                                 {isSendingMessage ? 'PROCESSANDO...' : 'ENVIAR DIRECTIVA'}
-                              </button>
-                           </div>
-                        </div>
-                    </div>
-
-                    {/* Status Control */}
-                    <div className="pt-8 border-t border-white/5 flex gap-4">
-                       <button 
-                          onClick={() => handleUpdateStatus(selectedCompany.id, selectedCompany.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE')}
-                          className={`flex-1 py-5 rounded-2xl border font-black text-[11px] uppercase tracking-[0.4em] transition-all ${
-                             selectedCompany.status === 'ACTIVE' 
-                             ? 'border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white' 
-                             : 'border-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white'
-                          }`}
-                       >
-                          {selectedCompany.status === 'ACTIVE' ? 'SUSPENDER OPERAÇÃO' : 'ACTIVAR OPERAÇÃO'}
-                       </button>
                     </div>
                 </div>
             </motion.div>
